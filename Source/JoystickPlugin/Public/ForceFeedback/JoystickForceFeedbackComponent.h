@@ -11,6 +11,7 @@
 #include "JoystickForceFeedbackComponent.generated.h"
 
 class UForceFeedbackEffectBase;
+class FJoystickForceFeedbackSubstepCallback;
 
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class JOYSTICKPLUGIN_API UJoystickForceFeedbackComponent : public UActorComponent
@@ -75,6 +76,8 @@ public:
 	bool Tickable;
 
 private:
+	friend class FJoystickForceFeedbackSubstepCallback;
+
 	UFUNCTION()
 	void OnSubsystemReady();
 	UFUNCTION()
@@ -83,6 +86,8 @@ private:
 	void JoystickUnplugged(const FJoystickInstanceId& JoystickInstanceId);
 
 	void TickEffects(float DeltaTime);
+	void RegisterPhysicsSubstepCallback();
+	void UnregisterPhysicsSubstepCallback();
 
 	void CreateEffects();
 	void CreateInstanceEffect(const FJoystickInstanceId& JoystickInstanceId);
@@ -91,4 +96,12 @@ private:
 
 	void ActionOnAllEffects(const TFunctionRef<void(UForceFeedbackEffectBase* Effect)>& CustomInitializer);
 	void ActionOnJoystickEffects(const FJoystickInstanceId& JoystickInstanceId, const TFunctionRef<void(UForceFeedbackEffectBase* Effect)>& CustomInitializer);
+
+	Chaos::FPhysicsSolverBase* RegisteredSolver;
+	FJoystickForceFeedbackSubstepCallback* SubstepCallback;
+	mutable FCriticalSection EffectsCriticalSection;
+
+	TWeakObjectPtr<UPrimitiveComponent> TargetPrimitive;
+	FCalculateCustomPhysics OnCalculateCustomPhysics;
+	void HandleSubstepTick(float DeltaTime, FBodyInstance* BodyInstance);
 };
