@@ -9,6 +9,7 @@
 #include "ForceFeedback/JoystickForceFeedbackSubstepCallback.h"
 #include "ForceFeedback/Effects/ForceFeedbackEffectBase.h"
 #include "Physics/Experimental/PhysScene_Chaos.h"
+#include "PhysicsEngine/BodyInstance.h"
 #include "PhysicsEngine/PhysicsSettings.h"
 
 UJoystickForceFeedbackComponent::UJoystickForceFeedbackComponent(const FObjectInitializer& ObjectInitializer)

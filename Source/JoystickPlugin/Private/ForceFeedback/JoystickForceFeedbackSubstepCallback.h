@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "Chaos/SimCallbackObject.h"
+
 class UJoystickForceFeedbackComponent;
 
 class FJoystickForceFeedbackSubstepCallback final
