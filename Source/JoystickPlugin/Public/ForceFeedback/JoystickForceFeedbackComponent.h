@@ -7,6 +7,9 @@
 #include "Data/JoystickInstanceId.h"
 #include "ForceFeedback/Data/Configuration/ForceFeedbackComponentConfiguration.h"
 #include "Runtime/Launch/Resources/Version.h"
+#include "PhysicsEngine/BodyInstance.h"
+#include "Physics/Experimental/PhysScene_Chaos.h"
+#include "Chaos/PhysicsObjectInternalInterface.h"
 
 #include "JoystickForceFeedbackComponent.generated.h"
 
