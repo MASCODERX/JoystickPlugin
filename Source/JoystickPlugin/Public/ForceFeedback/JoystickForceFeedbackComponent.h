@@ -30,7 +30,7 @@ public:
 	virtual void AsyncPhysicsTickComponent(float DeltaTime, float SimTime) override;
 #endif
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Joystick|Force Feedback Component")
 	void SetTickable(const bool bTickable);
 
 	UFUNCTION(BlueprintNativeEvent, Category="Joystick|Force Feedback Component|Events")
