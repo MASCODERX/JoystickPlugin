@@ -35,11 +35,13 @@ struct JOYSTICKPLUGIN_API FForceFeedbackComponentConfiguration : public FForceFe
 	{
 	}
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Joystick|Force Feedback|Tick")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Joystick|Force Feedback|Tick",
+		meta=(EditCondition="UsePhysicsSubstepTick == false", ToolTip="Adds the component to the native async physics tick callback. This runs on the physics thread, so ReceivedTick implementations must not touch game-thread-only state."))
 	bool UseAsyncPhysicsTick;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Joystick|Force Feedback|Tick",
-		meta=(ToolTip="Ticks the component from Chaos physics substeps using a PreIntegrate sim callback. This runs on the physics thread, so ReceivedTick implementations must not touch game-thread-only state."))
+		meta=(EditCondition="UseAsyncPhysicsTick == false", ToolTip=
+			"Ticks the component from Chaos physics substeps using a PreIntegrate sim callback. This runs on the physics thread, so ReceivedTick implementations must not touch game-thread-only state."))
 	bool UsePhysicsSubstepTick;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Joystick|Force Feedback", meta=(ToolTip="Useful if you want to control the Tick Interval and Tick Group of the effects."))
