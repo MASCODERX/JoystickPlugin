@@ -15,7 +15,7 @@ public class JoystickPluginEditor : ModuleRules
 			"Slate",
 			"SlateCore",
 			"InputCore",
-			"JoystickPlugin", 
+			"JoystickPlugin",
 			"SettingsEditor"
 		});
 
