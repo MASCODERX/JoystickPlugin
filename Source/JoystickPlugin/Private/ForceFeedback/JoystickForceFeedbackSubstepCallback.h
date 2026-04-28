@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "UObject/WeakObjectPtr.h"
 #include "Chaos/SimCallbackObject.h"
 
 class UJoystickForceFeedbackComponent;
