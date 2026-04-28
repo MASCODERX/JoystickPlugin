@@ -3,41 +3,13 @@
 
 #include "ForceFeedback/JoystickForceFeedbackComponent.h"
 
-#include "Engine/Engine.h"
-#include "ForceFeedback/Effects/ForceFeedbackEffectBase.h"
 #include "JoystickSubsystem.h"
 #include "PBDRigidsSolver.h"
+#include "Engine/Engine.h"
+#include "ForceFeedback/JoystickForceFeedbackSubstepCallback.h"
+#include "ForceFeedback/Effects/ForceFeedbackEffectBase.h"
 #include "Physics/Experimental/PhysScene_Chaos.h"
 #include "PhysicsEngine/PhysicsSettings.h"
-
-class FJoystickForceFeedbackSubstepCallback final
-	: public Chaos::TSimCallbackObject<
-		Chaos::FSimCallbackNoInput,
-		Chaos::FSimCallbackNoOutput>
-{
-public:
-	void Init(UJoystickForceFeedbackComponent* InComponent)
-	{
-		Component = InComponent;
-	}
-
-private:
-	virtual void OnPreSimulate_Internal() override
-	{
-		if (UJoystickForceFeedbackComponent* JoystickComponent = Component.Get())
-		{
-			JoystickComponent->TickEffects(static_cast<float>(GetDeltaTime_Internal()));
-		}
-	}
-
-	virtual FName GetFNameForStatId() const override
-	{
-		static const FLazyName StaticName(TEXT("FJoystickForceFeedbackSubstepCallback"));
-		return StaticName;
-	}
-
-	TWeakObjectPtr<UJoystickForceFeedbackComponent> Component;
-};
 
 UJoystickForceFeedbackComponent::UJoystickForceFeedbackComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -274,7 +246,7 @@ void UJoystickForceFeedbackComponent::RegisterPhysicsSubstepCallback()
 	{
 		return;
 	}
-	
+
 	OnCalculateCustomPhysics.BindUObject(this, &UJoystickForceFeedbackComponent::HandleSubstepTick);
 #endif
 }
