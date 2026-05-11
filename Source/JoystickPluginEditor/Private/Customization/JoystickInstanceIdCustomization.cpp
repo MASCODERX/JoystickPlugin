@@ -8,24 +8,20 @@
 #include "Data/JoystickInstanceId.h"
 #include "DetailWidgetRow.h"
 #include "DetailLayoutBuilder.h"
+#include "Widgets/Input/SNumericEntryBox.h"
 
 void FJoystickInstanceIdCustomization::CustomizeHeader(const TSharedRef<IPropertyHandle> StructPropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& StructCustomizationUtils)
 {
 	ValueProp = StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FJoystickInstanceId, Value));
-
-	FText ValueDisplay;
-	ValueProp->GetValueAsDisplayText(ValueDisplay);
 
 	HeaderRow
 		.NameContent()
 		[
 			StructPropertyHandle->CreatePropertyNameWidget(ValueProp->GetPropertyDisplayName())
 		]
-		.ValueContent().MinDesiredWidth(500)
+		.ValueContent()
 		[
-			SNew(STextBlock)
-			.Text(ValueDisplay)
-			.Font(IDetailLayoutBuilder::GetDetailFont())
+			ValueProp->CreatePropertyValueWidget()
 		];
 }
 

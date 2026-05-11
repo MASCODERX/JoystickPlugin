@@ -906,20 +906,11 @@ FJoystickInstanceId FJoystickInputDevice::GetInstanceIdByKey(const FKey& Key) co
 
 int FJoystickInputDevice::GetAxisIndexFromKey(const FKey& Key) const
 {
-	for (int i = 0; i < DeviceAxisKeys.Num(); i++)
+	for (const TTuple<FJoystickInstanceId, TArray<FKey>>& DeviceAxisKey : DeviceAxisKeys)
 	{
-		if (!DeviceAxisKeys.Contains(i))
+		if (DeviceAxisKey.Value.Contains(Key))
 		{
-			continue;
-		}
-
-		const TArray<FKey>& Keys = DeviceAxisKeys[i];
-		for (int AxisIndex = 0; AxisIndex < Keys.Num(); AxisIndex++)
-		{
-			if (Keys[AxisIndex] == Key)
-			{
-				return AxisIndex;
-			}
+			return DeviceAxisKey.Value.IndexOfByKey(Key);
 		}
 	}
 
@@ -928,20 +919,11 @@ int FJoystickInputDevice::GetAxisIndexFromKey(const FKey& Key) const
 
 int FJoystickInputDevice::GetButtonIndexFromKey(const FKey& Key) const
 {
-	for (int i = 0; i < DeviceButtonKeys.Num(); i++)
+	for (const TTuple<FJoystickInstanceId, TArray<FKey>>& DeviceButtonKey : DeviceButtonKeys)
 	{
-		if (!DeviceButtonKeys.Contains(i))
+		if (DeviceButtonKey.Value.Contains(Key))
 		{
-			continue;
-		}
-
-		const TArray<FKey>& Keys = DeviceButtonKeys[i];
-		for (int ButtonIndex = 0; ButtonIndex < Keys.Num(); ButtonIndex++)
-		{
-			if (Keys[ButtonIndex] == Key)
-			{
-				return ButtonIndex;
-			}
+			return DeviceButtonKey.Value.IndexOfByKey(Key);
 		}
 	}
 
