@@ -60,22 +60,22 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Joystick|Force Feedback Component")
 	void StopEffect();
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Joystick|Force Feedback Component")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Force Feedback", meta=(ToolTip="InstanceId of the Joystick to apply the effect to. Set to -1 to apply to all devices that support this effect type"))
 	FJoystickInstanceId InstanceId;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Joystick|Force Feedback Component")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Force Feedback", meta=(ToolTip="Effect type to spawn"))
 	TSubclassOf<UForceFeedbackEffectBase> EffectType;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Joystick|Force Feedback Component")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Force Feedback")
 	FForceFeedbackComponentConfiguration Configuration;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Joystick|Force Feedback Component")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Data")
 	TArray<UForceFeedbackEffectBase*> Effects;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Joystick|Force Feedback Component")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Data")
 	bool Running;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Joystick|Force Feedback Component")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Data")
 	bool Tickable;
 
 private:

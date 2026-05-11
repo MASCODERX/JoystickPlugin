@@ -13,6 +13,8 @@
 UJoystickForceFeedbackComponent::UJoystickForceFeedbackComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 	  , InstanceId(-1)
+	  , Running(false)
+	  , Tickable(true)
 	  , RegisteredSolver(nullptr)
 	  , SubstepCallback(nullptr)
 {
@@ -24,10 +26,10 @@ UJoystickForceFeedbackComponent::UJoystickForceFeedbackComponent(const FObjectIn
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 3
 	if (const UPhysicsSettings* PhysicsSettings = GetDefault<UPhysicsSettings>())
 	{
-		Configuration.UseAsyncPhysicsTick = PhysicsSettings->bTickPhysicsAsync;
+		Configuration.UseNativeAsyncPhysicsTick = PhysicsSettings->bTickPhysicsAsync;
 	}
 
-	SetAsyncPhysicsTickEnabled(Configuration.UseAsyncPhysicsTick);
+	SetAsyncPhysicsTickEnabled(Configuration.UseNativeAsyncPhysicsTick);
 #endif
 }
 
@@ -36,7 +38,7 @@ void UJoystickForceFeedbackComponent::BeginPlay()
 	Super::BeginPlay();
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 3
-	SetAsyncPhysicsTickEnabled(Configuration.UseAsyncPhysicsTick);
+	SetAsyncPhysicsTickEnabled(Configuration.UseNativeAsyncPhysicsTick);
 #endif
 
 	if (!IsValid(GEngine))
@@ -86,7 +88,7 @@ void UJoystickForceFeedbackComponent::TickComponent(const float DeltaTime, const
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (Configuration.UseAsyncPhysicsTick || SubstepCallback != nullptr)
+	if (Configuration.UseNativeAsyncPhysicsTick || SubstepCallback != nullptr)
 	{
 		return;
 	}
@@ -118,7 +120,7 @@ void UJoystickForceFeedbackComponent::AsyncPhysicsTickComponent(const float Delt
 {
 	Super::AsyncPhysicsTickComponent(DeltaTime, SimTime);
 
-	if (!Configuration.UseAsyncPhysicsTick)
+	if (!Configuration.UseNativeAsyncPhysicsTick)
 	{
 		return;
 	}
@@ -206,7 +208,7 @@ void UJoystickForceFeedbackComponent::TickEffects(const float DeltaTime)
 
 void UJoystickForceFeedbackComponent::RegisterPhysicsSubstepCallback()
 {
-	if (!Configuration.UsePhysicsSubstepTick || Configuration.UseAsyncPhysicsTick || SubstepCallback != nullptr)
+	if (!Configuration.UsePhysicsCallbackTick || Configuration.UseNativeAsyncPhysicsTick || SubstepCallback != nullptr)
 	{
 		return;
 	}
@@ -301,6 +303,11 @@ void UJoystickForceFeedbackComponent::CreateEffects()
 		{
 			CreateInstanceEffect(JoystickInstanceId);
 		}
+	}
+
+	if (Configuration.AutoStartOnInitialisation)
+	{
+		Running = true;
 	}
 }
 

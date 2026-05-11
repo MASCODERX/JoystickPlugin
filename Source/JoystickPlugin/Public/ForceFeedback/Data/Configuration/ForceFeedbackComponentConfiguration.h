@@ -13,37 +13,37 @@ struct JOYSTICKPLUGIN_API FForceFeedbackComponentConfiguration : public FForceFe
 	GENERATED_BODY()
 
 	FForceFeedbackComponentConfiguration()
-		: UseAsyncPhysicsTick(false)
-		  , UsePhysicsSubstepTick(false)
+		: UseNativeAsyncPhysicsTick(false)
+		  , UsePhysicsCallbackTick(false)
 		  , OverrideEffectTick(true)
 	{
 	}
 
 	FForceFeedbackComponentConfiguration(const FForceFeedbackConfigurationBase& BaseConfiguration, const bool bOverrideEffectTick)
 		: Super(BaseConfiguration)
-		  , UseAsyncPhysicsTick(false)
-		  , UsePhysicsSubstepTick(false)
+		  , UseNativeAsyncPhysicsTick(false)
+		  , UsePhysicsCallbackTick(false)
 		  , OverrideEffectTick(bOverrideEffectTick)
 	{
 	}
 
 	FForceFeedbackComponentConfiguration(const bool bAutoInit, const bool bAutoStartOnInit, const bool bOverrideEffectTick)
 		: Super(bAutoInit, bAutoStartOnInit)
-		  , UseAsyncPhysicsTick(false)
-		  , UsePhysicsSubstepTick(false)
+		  , UseNativeAsyncPhysicsTick(false)
+		  , UsePhysicsCallbackTick(false)
 		  , OverrideEffectTick(bOverrideEffectTick)
 	{
 	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Joystick|Force Feedback|Tick",
-		meta=(EditCondition="UsePhysicsSubstepTick == false", ToolTip="Adds the component to the native async physics tick callback. This runs on the physics thread, so ReceivedTick implementations must not touch game-thread-only state."))
-	bool UseAsyncPhysicsTick;
+		meta=(EditCondition="UsePhysicsCallbackTick == false", ToolTip="Adds the component to the native async physics tick callback. This runs on the physics thread, so ReceivedTick implementations must not touch game-thread-only state."))
+	bool UseNativeAsyncPhysicsTick;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Joystick|Force Feedback|Tick",
-		meta=(EditCondition="UseAsyncPhysicsTick == false", ToolTip=
+		meta=(EditCondition="UseNativeAsyncPhysicsTick == false", ToolTip=
 			"Ticks the component from Chaos physics substeps using a PreIntegrate sim callback. This runs on the physics thread, so ReceivedTick implementations must not touch game-thread-only state."))
-	bool UsePhysicsSubstepTick;
+	bool UsePhysicsCallbackTick;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Joystick|Force Feedback", meta=(ToolTip="Useful if you want to control the Tick Interval and Tick Group of the effects."))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Joystick|Force Feedback", meta=(ToolTip="Uses the component tick to drive the Effect tick, rather than the effect ticking itself. Useful if you want to control the Tick Interval and Tick Group of the effects."))
 	bool OverrideEffectTick;
 };
