@@ -892,12 +892,9 @@ FJoystickInstanceId FJoystickInputDevice::GetInstanceIdByKey(const FKey& Key) co
 {
 	for (const TPair<FJoystickInstanceId, TArray<FKey>>& Device : DeviceKeys)
 	{
-		for (const FKey& DeviceKey : Device.Value)
+		if (Device.Value.Contains(Key))
 		{
-			if (DeviceKey == Key)
-			{
-				return Device.Key;
-			}
+			return Device.Key;
 		}
 	}
 
