@@ -77,10 +77,16 @@ public:
 	UJoystickInputSettings();
 
 	void AddDeviceConfiguration(const FJoystickInputDeviceConfiguration& InDeviceConfiguration);
+	void RemoveDeviceConfiguration(int DeviceConfigurationIndex);
 	void AddProfileConfiguration(const FJoystickInputDeviceConfiguration& InDeviceConfiguration);
+	void ClearProfiles();
+
 	void DeviceAdded(const FJoystickInformation& JoystickInfo);
 	void DeviceRemoved(const FJoystickInstanceId& InstanceId);
 	void ResetDevices();
+
+	FString GetConnectedDeviceDisplayName(const FJoystickInformation& ConnectedDevice) const;
+	FString GetMatchingConnectedDeviceProfileDisplayName(const FJoystickInputDeviceConfiguration& DeviceConfiguration) const;
 
 	bool GetIgnoreGameControllers() const;
 	bool SetIgnoreGameControllers(const bool NewIgnoreGameControllers);
@@ -94,5 +100,6 @@ public:
 
 private:
 	FJoystickInputDeviceConfiguration* FindConfiguration(TArray<FJoystickInputDeviceConfiguration>& ConfigurationArray, const FJoystickInformation& Device, bool IncludeEmptyGuids = false) const;
-	FJoystickInputDeviceConfiguration* FindConfiguration(TArray<FJoystickInputDeviceConfiguration>& ConfigurationArray, const FJoystickInputDeviceConfiguration& Device, bool IncludeEmptyGuids = false) const;
+	static bool ConfigurationMatchesDevice(const FJoystickInputDeviceConfiguration& DeviceConfiguration, const FJoystickInformation& ConnectedDevice, bool IncludeEmptyGuids = false);
+	bool ConfigurationExists(TArray<FJoystickInputDeviceConfiguration>& ConfigurationArray, const FJoystickInputDeviceConfiguration& Device, bool IncludeEmptyGuids = false) const;
 };

@@ -33,7 +33,10 @@ public:
 	bool GetButtonConfiguration(const FKey& AxisKey, FJoystickInputDeviceButtonProperties& Properties);
 
 	void LoadJoystickProfiles();
+	void ReloadJoystickProfiles();
 	void RebuildDeviceConfigurations();
+
+	bool CreateJoystickProfile(const FString& DeviceProfileName, const FJoystickInputDeviceConfiguration& DeviceConfiguration);
 
 	FJoystickInputDeviceConfiguration* GetInputDeviceConfiguration(const FJoystickInformation& Device);
 	FJoystickInputDeviceConfiguration* GetInputDeviceConfigurationByKey(const FKey& Key);
@@ -48,10 +51,7 @@ private:
 	float AsFloat(const FString& Input) const;
 	int32 AsInteger(const FString& Input) const;
 	bool IsBlueprintReadWrite(const FProperty* Property) const;
-	void WriteChangedStructPropsToIni(const UScriptStruct* StructType, const void* CurrentValue, const FString& Section, const FString& IniFile) const;
-
-	//TODO: Expose as an editor at some point
-	void CreateJoystickProfile(const FKey& AxisKey, FJoystickInputDeviceAxisProperties Properties);
+	void WriteChangedStructPropsToProfile(FConfigFile& ProfileConfigFile, const UScriptStruct* StructType, const void* CurrentValue, const FString& Section) const;
 
 	TMap<FString, FJoystickInputDeviceConfiguration> InputDeviceConfigurations;
 

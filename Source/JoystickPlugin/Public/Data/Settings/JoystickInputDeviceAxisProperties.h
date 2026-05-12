@@ -29,7 +29,7 @@ struct JOYSTICKPLUGIN_API FJoystickInputDeviceAxisProperties
 	UPROPERTY(EditAnywhere, Category="Axis Properties", meta=(UIMin="0", ClampMin="0"))
 	int AxisIndex;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Axis Properties", meta=(ConfigRestartRequired=true))
+	UPROPERTY(EditAnywhere, Category="Axis Properties", meta=(ConfigRestartRequired=true))
 	bool OverrideDisplayName;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Axis Properties", meta=(EditCondition="OverrideDisplayName", EditConditionHides, ConfigRestartRequired=true))

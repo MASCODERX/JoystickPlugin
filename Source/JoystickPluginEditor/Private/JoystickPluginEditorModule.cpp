@@ -7,6 +7,8 @@
 #include "JoystickInputSettings.h"
 #include "Menus/JoystickInputViewer.h"
 #include "JoystickPluginSettingsDetails.h"
+#include "Customization/JoystickInputDeviceConfigurationCustomization.h"
+#include "Customization/JoystickInformationCustomization.h"
 #include "Customization/JoystickInstanceIdCustomization.h"
 #include "Modules/ModuleManager.h"
 #include "PropertyEditorModule.h"
@@ -81,6 +83,8 @@ void FJoystickPluginEditorModule::RegisterPropertyLayout() const
 {
 	FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	PropertyModule.RegisterCustomClassLayout(UJoystickInputSettings::StaticClass()->GetFName(), FOnGetDetailCustomizationInstance::CreateStatic(&FJoystickPluginSettingsDetails::MakeInstance));
+	PropertyModule.RegisterCustomPropertyTypeLayout("JoystickInputDeviceConfiguration", FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FJoystickInputDeviceConfigurationCustomization::MakeInstance));
+	PropertyModule.RegisterCustomPropertyTypeLayout("JoystickInformation", FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FJoystickInformationCustomization::MakeInstance));
 	PropertyModule.RegisterCustomPropertyTypeLayout("JoystickInstanceId", FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FJoystickInstanceIdCustomization::MakeInstance));
 }
 

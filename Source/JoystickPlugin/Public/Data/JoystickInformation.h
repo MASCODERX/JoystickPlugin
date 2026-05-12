@@ -93,4 +93,9 @@ struct FJoystickInformation
 	FJoystickSensorInformation Accelerometer;
 
 	int CollectionIndex;
+
+	FString GetDeviceDisplayName() const
+	{
+		return !DeviceName.IsEmpty() ? DeviceName : SafeDeviceName;
+	}
 };

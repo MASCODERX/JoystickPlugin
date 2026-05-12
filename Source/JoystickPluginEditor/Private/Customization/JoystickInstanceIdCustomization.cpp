@@ -7,8 +7,6 @@
 
 #include "Data/JoystickInstanceId.h"
 #include "DetailWidgetRow.h"
-#include "DetailLayoutBuilder.h"
-#include "Widgets/Input/SNumericEntryBox.h"
 
 void FJoystickInstanceIdCustomization::CustomizeHeader(const TSharedRef<IPropertyHandle> StructPropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& StructCustomizationUtils)
 {

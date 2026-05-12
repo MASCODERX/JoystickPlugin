@@ -3,14 +3,12 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "UObject/ObjectMacros.h"
 #include "Framework/Commands/InputChord.h"
 #include "Fonts/SlateFontInfo.h"
 #include "Layout/Margin.h"
 #include "Widgets/SWidget.h"
-#include "Components/Widget.h"
 #include "Styling/SlateTypes.h"
 #include "Layout/Visibility.h"
 
