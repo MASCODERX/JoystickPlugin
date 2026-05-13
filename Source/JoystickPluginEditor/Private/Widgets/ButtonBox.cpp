@@ -25,7 +25,7 @@ void SButtonBox::Construct(const FArguments& InArgs)
 
 	SetToolTipText(ButtonText);
 
-	const EMouseCursor::Type HandCursor = OnClickedDelegate.IsBound() ? EMouseCursor::Hand : EMouseCursor::None;
+	const EMouseCursor::Type HandCursor = OnClickedDelegate.IsBound() ? EMouseCursor::Type::Hand : EMouseCursor::Type::Default;
 
 	ChildSlot
 	[
@@ -40,7 +40,7 @@ void SButtonBox::Construct(const FArguments& InArgs)
 			.MinDesiredHeight(60.0f)
 			[
 				SNew(SBorder)
-				.BorderImage_Lambda([this]()
+				.BorderImage_Lambda([this]
 				{
 					return Value.Get()
 						       ? FAppStyle::GetBrush("ToolPanel.GroupBorder")
@@ -65,7 +65,7 @@ void SButtonBox::Construct(const FArguments& InArgs)
 							.TextStyle(FAppStyle::Get(), "SmallText")
 							.Justification(ETextJustify::Center)
 							.AutoWrapText(true)
-							.ColorAndOpacity_Lambda([this]()
+							.ColorAndOpacity_Lambda([this]
 							{
 								return Value.Get()
 									       ? FSlateColor(FLinearColor::White)
@@ -105,7 +105,7 @@ FSlateColor SButtonBox::GetBackgroundColor() const
 	return FSlateColor(GetColor());
 }
 
-FReply SButtonBox::HandleClicked()
+FReply SButtonBox::HandleClicked() const
 {
 	if (OnClickedDelegate.IsBound())
 	{

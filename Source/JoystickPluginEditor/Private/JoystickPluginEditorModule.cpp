@@ -5,13 +5,16 @@
 
 #include "ISettingsModule.h"
 #include "JoystickInputSettings.h"
-#include "Menus/JoystickInputViewer.h"
 #include "JoystickPluginSettingsDetails.h"
-#include "Customization/JoystickInstanceIdCustomization.h"
-#include "Modules/ModuleManager.h"
-#include "PropertyEditorModule.h"
 #include "PropertyEditorDelegates.h"
+#include "PropertyEditorModule.h"
 #include "ToolMenus.h"
+#include "Customization/JoystickInformationCustomization.h"
+#include "Customization/JoystickInputDeviceConfigurationCustomization.h"
+#include "Customization/JoystickInstanceIdCustomization.h"
+#include "Data/Settings/JoystickInputDeviceConfiguration.h"
+#include "Menus/JoystickInputViewer.h"
+#include "Modules/ModuleManager.h"
 
 #define LOCTEXT_NAMESPACE "JoystickPluginEditor"
 
@@ -25,7 +28,7 @@ void FJoystickPluginEditorModule::StartupModule()
 	FGlobalTabmanager::Get()
 		->RegisterNomadTabSpawner(
 			JoystickViewerTabId,
-			FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs& SpawnTabArgs) -> TSharedRef<SDockTab>
+			FOnSpawnTab::CreateLambda([](const FSpawnTabArgs& SpawnTabArgs) -> TSharedRef<SDockTab>
 			{
 				const TSharedRef<SDockTab> DockTab =
 					SNew(SDockTab)
@@ -57,6 +60,7 @@ void FJoystickPluginEditorModule::ShutdownModule()
 	}
 
 	UnregisterSettings();
+	UnregisterPropertyLayout();
 
 	IModuleInterface::ShutdownModule();
 }
@@ -77,13 +81,6 @@ void FJoystickPluginEditorModule::RegisterMenus() const
 	);
 }
 
-void FJoystickPluginEditorModule::RegisterPropertyLayout() const
-{
-	FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
-	PropertyModule.RegisterCustomClassLayout(UJoystickInputSettings::StaticClass()->GetFName(), FOnGetDetailCustomizationInstance::CreateStatic(&FJoystickPluginSettingsDetails::MakeInstance));
-	PropertyModule.RegisterCustomPropertyTypeLayout("JoystickInstanceId", FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FJoystickInstanceIdCustomization::MakeInstance));
-}
-
 static FName SettingsSection = TEXT("Joystick Input");
 
 void FJoystickPluginEditorModule::RegisterSettings() const
@@ -96,11 +93,33 @@ void FJoystickPluginEditorModule::RegisterSettings() const
 	}
 }
 
+void FJoystickPluginEditorModule::RegisterPropertyLayout() const
+{
+	if (FPropertyEditorModule* PropertyModule = FModuleManager::GetModulePtr<FPropertyEditorModule>("PropertyEditor"))
+	{
+		PropertyModule->RegisterCustomClassLayout(UJoystickInputSettings::StaticClass()->GetFName(), FOnGetDetailCustomizationInstance::CreateStatic(&FJoystickPluginSettingsDetails::MakeInstance));
+		PropertyModule->RegisterCustomPropertyTypeLayout(FJoystickInputDeviceConfiguration::StaticStruct()->GetFName(), FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FJoystickInputDeviceConfigurationCustomization::MakeInstance));
+		PropertyModule->RegisterCustomPropertyTypeLayout(FJoystickInformation::StaticStruct()->GetFName(), FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FJoystickInformationCustomization::MakeInstance));
+		PropertyModule->RegisterCustomPropertyTypeLayout(FJoystickInstanceId::StaticStruct()->GetFName(), FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FJoystickInstanceIdCustomization::MakeInstance));
+	}
+}
+
 void FJoystickPluginEditorModule::UnregisterSettings() const
 {
 	if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings"))
 	{
 		SettingsModule->UnregisterSettings("Project", "Engine", SettingsSection);
+	}
+}
+
+void FJoystickPluginEditorModule::UnregisterPropertyLayout() const
+{
+	if (FPropertyEditorModule* PropertyModule = FModuleManager::GetModulePtr<FPropertyEditorModule>("PropertyEditor"))
+	{
+		PropertyModule->UnregisterCustomClassLayout(UJoystickInputSettings::StaticClass()->GetFName());
+		PropertyModule->UnregisterCustomPropertyTypeLayout(FJoystickInputDeviceConfiguration::StaticStruct()->GetFName());
+		PropertyModule->UnregisterCustomPropertyTypeLayout(FJoystickInformation::StaticStruct()->GetFName());
+		PropertyModule->UnregisterCustomPropertyTypeLayout(FJoystickInstanceId::StaticStruct()->GetFName());
 	}
 }
 

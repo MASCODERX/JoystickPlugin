@@ -19,34 +19,6 @@ const UJoystickProfileManager* UJoystickProfileManager::GetJoystickProfileManage
 	return GetDefault<UJoystickProfileManager>();
 }
 
-UJoystickSubsystem* UJoystickProfileManager::GetJoystickSubsystem() const
-{
-	if (!IsValid(GEngine))
-	{
-		return nullptr;
-	}
-
-	return GEngine->GetEngineSubsystem<UJoystickSubsystem>();
-}
-
-bool UJoystickProfileManager::GetDeviceInfoByKey(const FKey& Key, FJoystickInformation& OutJoystickInformation) const
-{
-	UJoystickSubsystem* JoystickSubsystem = GetJoystickSubsystem();
-	if (!IsValid(JoystickSubsystem))
-	{
-		return false;
-	}
-
-	const FJoystickInputDevice* InputDevice = JoystickSubsystem->GetInputDevice();
-	if (InputDevice == nullptr)
-	{
-		return false;
-	}
-
-	const FJoystickInstanceId& InstanceId = InputDevice->GetInstanceIdByKey(Key);
-	return JoystickSubsystem->GetJoystickInfo(InstanceId, OutJoystickInformation);
-}
-
 bool UJoystickProfileManager::UpdateAxisConfiguration(const FKey& AxisKey, FJoystickInputDeviceAxisProperties Properties)
 {
 	if (!AxisKey.IsValid() || !(AxisKey.IsAxis1D() || AxisKey.IsAxis2D() || AxisKey.IsAxis3D()))
@@ -365,6 +337,18 @@ void UJoystickProfileManager::LoadJoystickProfiles()
 	RebuildDeviceConfigurations();
 }
 
+void UJoystickProfileManager::ReloadJoystickProfiles()
+{
+	UJoystickInputSettings* JoystickInputSettings = GetMutableDefault<UJoystickInputSettings>();
+	if (!IsValid(JoystickInputSettings))
+	{
+		return;
+	}
+
+	JoystickInputSettings->ClearProfiles();
+	LoadJoystickProfiles();
+}
+
 void UJoystickProfileManager::RebuildDeviceConfigurations()
 {
 	const UJoystickSubsystem* JoystickSubsystem = GetJoystickSubsystem();
@@ -409,6 +393,49 @@ void UJoystickProfileManager::RebuildDeviceConfigurations()
 	}
 
 	InputDevice->UpdateDeviceProperties();
+}
+
+
+bool UJoystickProfileManager::CreateJoystickProfile(const FString& DeviceProfileName, const FJoystickInputDeviceConfiguration& DeviceConfiguration)
+{
+	const FString ProfilesDirectory = FPaths::Combine(FJoystickPluginModule::PluginDirectory, ProfilesRootDirectory);
+	const FString DeviceProfileFile = FString::Printf(TEXT("%s.ini"), *DeviceProfileName.Replace(TEXT(" "), TEXT("")));
+	const FString DeviceProfile = FPaths::Combine(ProfilesDirectory, DeviceProfileFile);
+
+	FConfigFile ProfileConfigFile;
+	switch (DeviceConfiguration.DeviceIdentifyMethod)
+	{
+	case EJoystickIdentifierType::Legacy:
+		ProfileConfigFile.SetString(*JoystickConfigurationSection, GET_MEMBER_NAME_STRING_CHECKED(FJoystickInputDeviceConfiguration, ProductGuid), *DeviceConfiguration.ProductGuid.ToString());
+	case EJoystickIdentifierType::Hashed:
+	default:
+		ProfileConfigFile.SetString(*JoystickConfigurationSection, GET_MEMBER_NAME_STRING_CHECKED(FJoystickInputDeviceConfiguration, DeviceHash), *DeviceConfiguration.DeviceHash);
+	}
+
+	if (DeviceConfiguration.OverrideDeviceName)
+	{
+		ProfileConfigFile.SetString(*JoystickConfigurationSection, GET_MEMBER_NAME_STRING_CHECKED(FJoystickInputDeviceConfiguration, DeviceName), *DeviceConfiguration.DeviceName);
+	}
+
+	for (int AxisPropertyIndex = 0; AxisPropertyIndex < DeviceConfiguration.AxisProperties.Num(); ++AxisPropertyIndex)
+	{
+		const FJoystickInputDeviceAxisProperties& AxisProperties = DeviceConfiguration.AxisProperties[AxisPropertyIndex];
+		const FString AxisSection = FString::Printf(TEXT("%s%d"), *AxisPropertiesSection, AxisProperties.AxisIndex);
+		WriteChangedStructPropsToProfile(ProfileConfigFile, FJoystickInputDeviceAxisProperties::StaticStruct(), &AxisProperties, AxisSection);
+	}
+	for (int ButtonPropertyIndex = 0; ButtonPropertyIndex < DeviceConfiguration.ButtonProperties.Num(); ++ButtonPropertyIndex)
+	{
+		const FJoystickInputDeviceButtonProperties& ButtonProperties = DeviceConfiguration.ButtonProperties[ButtonPropertyIndex];
+		const FString ButtonSection = FString::Printf(TEXT("%s%d"), *ButtonPropertiesSection, ButtonProperties.ButtonIndex);
+		WriteChangedStructPropsToProfile(ProfileConfigFile, FJoystickInputDeviceButtonProperties::StaticStruct(), &ButtonProperties, ButtonSection);
+	}
+	const bool Result = ProfileConfigFile.Write(DeviceProfile);
+	if (Result)
+	{
+		ReloadJoystickProfiles();
+	}
+
+	return Result;
 }
 
 FJoystickInputDeviceConfiguration* UJoystickProfileManager::GetInputDeviceConfiguration(const FJoystickInformation& Device)
@@ -485,6 +512,34 @@ const FJoystickInputDeviceButtonProperties* UJoystickProfileManager::GetButtonPr
 	return DeviceConfiguration->GetButtonProperties(ButtonIndex);
 }
 
+UJoystickSubsystem* UJoystickProfileManager::GetJoystickSubsystem() const
+{
+	if (!IsValid(GEngine))
+	{
+		return nullptr;
+	}
+
+	return GEngine->GetEngineSubsystem<UJoystickSubsystem>();
+}
+
+bool UJoystickProfileManager::GetDeviceInfoByKey(const FKey& Key, FJoystickInformation& OutJoystickInformation) const
+{
+	UJoystickSubsystem* JoystickSubsystem = GetJoystickSubsystem();
+	if (!IsValid(JoystickSubsystem))
+	{
+		return false;
+	}
+
+	const FJoystickInputDevice* InputDevice = JoystickSubsystem->GetInputDevice();
+	if (InputDevice == nullptr)
+	{
+		return false;
+	}
+
+	const FJoystickInstanceId& InstanceId = InputDevice->GetInstanceIdByKey(Key);
+	return JoystickSubsystem->GetJoystickInfo(InstanceId, OutJoystickInformation);
+}
+
 bool UJoystickProfileManager::AsBoolean(const FString& Input) const
 {
 	return Input.Equals(TEXT("true"), ESearchCase::IgnoreCase) || Input.Equals(TEXT("1"), ESearchCase::IgnoreCase);
@@ -507,7 +562,7 @@ bool UJoystickProfileManager::IsBlueprintReadWrite(const FProperty* Property) co
 		&& !Property->HasAnyPropertyFlags(CPF_BlueprintReadOnly);
 }
 
-void UJoystickProfileManager::WriteChangedStructPropsToIni(const UScriptStruct* StructType, const void* CurrentValue, const FString& Section, const FString& IniFile) const
+void UJoystickProfileManager::WriteChangedStructPropsToProfile(FConfigFile& ProfileConfigFile, const UScriptStruct* StructType, const void* CurrentValue, const FString& Section) const
 {
 	const int32 StructSize = StructType->GetStructureSize();
 	uint8* DefaultValue = static_cast<uint8*>(FMemory_Alloca(StructSize));
@@ -533,64 +588,8 @@ void UJoystickProfileManager::WriteChangedStructPropsToIni(const UScriptStruct* 
 
 		FString ExportedValue;
 		Property->ExportTextItem_Direct(ExportedValue, CurrentProperty, DefaultProperty, nullptr, PPF_None);
-		GConfig->SetString(*Section, *Property->GetName(), *ExportedValue, IniFile);
+		ProfileConfigFile.SetString(*Section, *Property->GetName(), *ExportedValue);
 	}
-}
-
-void UJoystickProfileManager::CreateJoystickProfile(const FKey& AxisKey, FJoystickInputDeviceAxisProperties Properties)
-{
-	if (!AxisKey.IsValid() || !(AxisKey.IsAxis1D() || AxisKey.IsAxis2D() || AxisKey.IsAxis3D()))
-	{
-		return;
-	}
-
-	FJoystickInformation JoystickInformation;
-	if (!GetDeviceInfoByKey(AxisKey, JoystickInformation))
-	{
-		return;
-	}
-
-	UJoystickSubsystem* JoystickSubsystem = GetJoystickSubsystem();
-	if (!IsValid(JoystickSubsystem))
-	{
-		return;
-	}
-
-	FJoystickInputDevice* InputDevice = JoystickSubsystem->GetInputDevice();
-	if (InputDevice == nullptr)
-	{
-		return;
-	}
-
-	UJoystickInputSettings* JoystickInputSettings = GetMutableDefault<UJoystickInputSettings>();
-	if (!IsValid(JoystickInputSettings))
-	{
-		return;
-	}
-
-	FJoystickInputDeviceConfiguration DeviceConfiguration;
-	DeviceConfiguration.DeviceIdentifyMethod = EJoystickIdentifierType::Hashed;
-	DeviceConfiguration.DeviceHash = JoystickInformation.DeviceHash;
-
-	const int AxisIndex = InputDevice->GetAxisIndexFromKey(AxisKey);
-	Properties.AxisIndex = AxisIndex;
-
-	DeviceConfiguration.AxisProperties.Add(Properties);
-
-	const FString ProfilesDirectory = FPaths::Combine(FJoystickPluginModule::PluginDirectory, ProfilesRootDirectory);
-	const FString DeviceProfileFile = FString::Printf(TEXT("%s.ini"), *JoystickInformation.DeviceName.Replace(TEXT(" "), TEXT("")));
-	const FString DeviceProfile = FPaths::Combine(ProfilesDirectory, DeviceProfileFile);
-
-	GConfig->SetString(*JoystickConfigurationSection, GET_MEMBER_NAME_STRING_CHECKED(FJoystickInputDeviceConfiguration, DeviceHash), *DeviceConfiguration.DeviceHash, DeviceProfile);
-	for (int i = 0; i < DeviceConfiguration.AxisProperties.Num(); ++i)
-	{
-		const FJoystickInputDeviceAxisProperties& AxisProperties = DeviceConfiguration.AxisProperties[i];
-		const FString AxisSection = FString::Printf(TEXT("%s%d"), *AxisPropertiesSection, AxisProperties.AxisIndex);
-		WriteChangedStructPropsToIni(FJoystickInputDeviceAxisProperties::StaticStruct(), &AxisProperties, AxisSection, DeviceProfile);
-	}
-	GConfig->Flush(false, DeviceProfile);
-
-	InputDevice->UpdateDeviceProperties();
 }
 
 FString UJoystickProfileManager::ProfilesRootDirectory("Profiles");

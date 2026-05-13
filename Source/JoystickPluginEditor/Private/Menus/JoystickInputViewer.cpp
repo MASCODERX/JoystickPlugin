@@ -692,7 +692,7 @@ void SJoystickInputViewer::Tick(const FGeometry& AllottedGeometry, const double 
 		return;
 	}
 
-	UJoystickSubsystem* JoystickSubsystem = GEngine->GetEngineSubsystem<UJoystickSubsystem>();
+	const UJoystickSubsystem* JoystickSubsystem = GEngine->GetEngineSubsystem<UJoystickSubsystem>();
 	if (!IsValid(JoystickSubsystem))
 	{
 		return;
@@ -770,7 +770,7 @@ void SJoystickInputViewer::CreateWidgets()
 		return;
 	}
 
-	UJoystickSubsystem* JoystickSubsystem = GEngine->GetEngineSubsystem<UJoystickSubsystem>();
+	const UJoystickSubsystem* JoystickSubsystem = GEngine->GetEngineSubsystem<UJoystickSubsystem>();
 	if (!IsValid(JoystickSubsystem))
 	{
 		return;
@@ -813,7 +813,7 @@ void SJoystickInputViewer::CreateAxisBars(const UJoystickSubsystem* JoystickSubs
 			.Value(AxisValue.GetValue())
 			.AxisIndex(i)
 			.DisplayName(Key.GetDisplayName())
-			.OnClicked(FSimpleDelegate::CreateLambda([this, Key, i]()
+			.OnClicked(FSimpleDelegate::CreateLambda([this, Key, i]
 			{
 				OpenAxisConfigurationEditor(Key, i);
 			}))
@@ -853,7 +853,7 @@ void SJoystickInputViewer::CreateButtonBoxes(const UJoystickSubsystem* JoystickS
 			.Value(ButtonValue.GetValue())
 			.ButtonIndex(i)
 			.DisplayName(Key.GetDisplayName())
-			.OnClicked(FSimpleDelegate::CreateLambda([this, Key, i]()
+			.OnClicked(FSimpleDelegate::CreateLambda([this, Key, i]
 			{
 				OpenButtonConfigurationEditor(Key, i);
 			}))

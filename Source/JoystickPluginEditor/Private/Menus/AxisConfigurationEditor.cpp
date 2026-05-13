@@ -146,10 +146,10 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 						.AutoWidth()
 						[
 							SAssignNew(InvertInputCheckBox, SCheckBox)
-							.IsChecked_Lambda([this]() { return CurrentProperties.InvertInput ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+							.IsChecked_Lambda([this] { return CurrentProperties.InvertInput ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
 							.OnCheckStateChanged_Lambda([this](const ECheckBoxState NewState)
 							{
-								CurrentProperties.InvertInput = (NewState == ECheckBoxState::Checked);
+								CurrentProperties.InvertInput = NewState == ECheckBoxState::Checked;
 								CurrentProperties.RemappingEnabled = CurrentProperties.RerangeInput || CurrentProperties.RerangeOutput || CurrentProperties.InvertInput;
 							})
 						]
@@ -174,11 +174,10 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 						.AutoWidth()
 						[
 							SAssignNew(OverrideDisplayNameCheckBox, SCheckBox)
-							.IsChecked_Lambda([this]() { return CurrentProperties.OverrideDisplayName ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+							.IsChecked_Lambda([this] { return CurrentProperties.OverrideDisplayName ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
 							.OnCheckStateChanged_Lambda([this](const ECheckBoxState NewState)
 							{
-								const bool bWasOverrideEnabled = CurrentProperties.OverrideDisplayName;
-								CurrentProperties.OverrideDisplayName = (NewState == ECheckBoxState::Checked);
+								CurrentProperties.OverrideDisplayName = NewState == ECheckBoxState::Checked;
 								if (DisplayNameInputContainer.IsValid())
 								{
 									DisplayNameInputContainer->SetVisibility(CurrentProperties.OverrideDisplayName ? EVisibility::Visible : EVisibility::Collapsed);
@@ -265,7 +264,7 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 						[
 							SNew(STextBlock)
 							.Text(FText::FromString("Disabled"))
-							.IsEnabled_Lambda([this]() { return SelectedInputRange == -1; })
+							.IsEnabled_Lambda([this] { return SelectedInputRange == -1; })
 							.TextStyle(FAppStyle::Get(), "NormalText")
 						]
 					]
@@ -298,7 +297,7 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 						[
 							SNew(STextBlock)
 							.Text(FText::FromString("-1 to 0"))
-							.IsEnabled_Lambda([this]() { return SelectedInputRange == 0; })
+							.IsEnabled_Lambda([this] { return SelectedInputRange == 0; })
 							.TextStyle(FAppStyle::Get(), "NormalText")
 						]
 						+ SHorizontalBox::Slot()
@@ -308,7 +307,7 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 							SNew(SProgressBar)
 							                  .Percent(0.5) // 0% to 50% = 50% full
 							                  .FillColorAndOpacity(FLinearColor(0.2f, 1.0f, 0.2f, 1.0f))
-							                  .IsEnabled_Lambda([this]() { return SelectedInputRange == 0; })
+							                  .IsEnabled_Lambda([this] { return SelectedInputRange == 0; })
 							                  .Style(&ProgressBarStyle)
 						]
 					]
@@ -341,7 +340,7 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 						[
 							SNew(STextBlock)
 							.Text(FText::FromString("-1 to 1"))
-							.IsEnabled_Lambda([this]() { return SelectedInputRange == 1; })
+							.IsEnabled_Lambda([this] { return SelectedInputRange == 1; })
 							.TextStyle(FAppStyle::Get(), "NormalText")
 						]
 						+ SHorizontalBox::Slot()
@@ -351,7 +350,7 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 							SNew(SProgressBar)
 							                  .Percent(1.0f) // 0% to 100% = 100% full
 							                  .FillColorAndOpacity(FLinearColor(0.2f, 1.0f, 0.2f, 1.0f))
-							                  .IsEnabled_Lambda([this]() { return SelectedInputRange == 1; })
+							                  .IsEnabled_Lambda([this] { return SelectedInputRange == 1; })
 							                  .Style(&ProgressBarStyle)
 						]
 					]
@@ -385,7 +384,7 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 							SNew(STextBlock)
 							.Text(FText::FromString("0 to 1"))
 							.TextStyle(FAppStyle::Get(), "NormalText")
-							.IsEnabled_Lambda([this]() { return SelectedInputRange == 2; })
+							.IsEnabled_Lambda([this] { return SelectedInputRange == 2; })
 						]
 						+ SHorizontalBox::Slot()
 						.FillWidth(1.0f)
@@ -395,7 +394,7 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 							                  .Percent(0.5f) // 0% to 100% = 100% full
 							                  .BarFillType(EProgressBarFillType::RightToLeft)
 							                  .FillColorAndOpacity(FLinearColor(0.2f, 1.0f, 0.2f, 1.0f))
-							                  .IsEnabled_Lambda([this]() { return SelectedInputRange == 2; })
+							                  .IsEnabled_Lambda([this] { return SelectedInputRange == 2; })
 							                  .Style(&ProgressBarStyle)
 						]
 					]
@@ -434,7 +433,7 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 							[
 								SNew(STextBlock)
 								.Text(FText::FromString("Custom"))
-								.IsEnabled_Lambda([this]() { return SelectedInputRange == 3; })
+								.IsEnabled_Lambda([this] { return SelectedInputRange == 3; })
 								.TextStyle(FAppStyle::Get(), "NormalText")
 							]
 						]
@@ -460,7 +459,7 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 									[
 										SNew(STextBlock)
 										.Text(FText::FromString("Min:"))
-										.IsEnabled_Lambda([this]() { return SelectedInputRange == 3; })
+										.IsEnabled_Lambda([this] { return SelectedInputRange == 3; })
 										.TextStyle(FAppStyle::Get(), "NormalText")
 									]
 									+ SHorizontalBox::Slot()
@@ -468,7 +467,7 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 									[
 										SAssignNew(CustomRangeMinInput, SNumericEntryBox<float>)
 										.IsEnabled(SelectedInputRange == 3)
-										.Value_Lambda([this]() { return CurrentProperties.InputRangeMin; })
+										.Value_Lambda([this] { return CurrentProperties.InputRangeMin; })
 										.OnValueChanged_Lambda([this](const float NewValue)
 										{
 											CurrentProperties.InputRangeMin = NewValue;
@@ -519,7 +518,7 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 									[
 										SNew(STextBlock)
 										.Text(FText::FromString("Max:"))
-										.IsEnabled_Lambda([this]() { return SelectedInputRange == 3; })
+										.IsEnabled_Lambda([this] { return SelectedInputRange == 3; })
 										.TextStyle(FAppStyle::Get(), "NormalText")
 									]
 									+ SHorizontalBox::Slot()
@@ -527,7 +526,7 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 									[
 										SAssignNew(CustomRangeMaxInput, SNumericEntryBox<float>)
 										.IsEnabled(SelectedInputRange == 3)
-										.Value_Lambda([this]() { return CurrentProperties.InputRangeMax; })
+										.Value_Lambda([this] { return CurrentProperties.InputRangeMax; })
 										.OnValueChanged_Lambda([this](const float NewValue)
 										{
 											CurrentProperties.InputRangeMax = NewValue;
@@ -608,7 +607,7 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 						[
 							SNew(STextBlock)
 							.Text(FText::FromString("Disabled"))
-							.IsEnabled_Lambda([this]() { return SelectedOutputRange == -1; })
+							.IsEnabled_Lambda([this] { return SelectedOutputRange == -1; })
 							.TextStyle(FAppStyle::Get(), "NormalText")
 						]
 					]
@@ -641,7 +640,7 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 						[
 							SNew(STextBlock)
 							.Text(FText::FromString("0 to 1"))
-							.IsEnabled_Lambda([this]() { return SelectedOutputRange == 0; })
+							.IsEnabled_Lambda([this] { return SelectedOutputRange == 0; })
 							.TextStyle(FAppStyle::Get(), "NormalText")
 						]
 						+ SHorizontalBox::Slot()
@@ -652,7 +651,7 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 							                  .Percent(0.5f) // 50% full (0% to 50% range)
 							                  .BarFillType(EProgressBarFillType::RightToLeft)
 							                  .FillColorAndOpacity(FLinearColor(0.2f, 1.0f, 0.2f, 1.0f))
-							                  .IsEnabled_Lambda([this]() { return SelectedOutputRange == 0; })
+							                  .IsEnabled_Lambda([this] { return SelectedOutputRange == 0; })
 							                  .Style(&ProgressBarStyle)
 						]
 					]
@@ -685,7 +684,7 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 						[
 							SNew(STextBlock)
 							.Text(FText::FromString("-1 to 1"))
-							.IsEnabled_Lambda([this]() { return SelectedOutputRange == 1; })
+							.IsEnabled_Lambda([this] { return SelectedOutputRange == 1; })
 							.TextStyle(FAppStyle::Get(), "NormalText")
 						]
 						+ SHorizontalBox::Slot()
@@ -695,7 +694,7 @@ void SAxisConfigurationEditor::Construct(const FArguments& InArgs)
 							SNew(SProgressBar)
 							                  .Percent(1.0f) // 100% full
 							                  .FillColorAndOpacity(FLinearColor(0.2f, 1.0f, 0.2f, 1.0f))
-							                  .IsEnabled_Lambda([this]() { return SelectedOutputRange == 1; })
+							                  .IsEnabled_Lambda([this] { return SelectedOutputRange == 1; })
 							                  .Style(&ProgressBarStyle)
 						]
 					]

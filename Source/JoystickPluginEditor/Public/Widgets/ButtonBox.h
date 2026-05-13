@@ -33,5 +33,5 @@ private:
 
 	FLinearColor GetColor() const;
 	FSlateColor GetBackgroundColor() const;
-	FReply HandleClicked();
+	FReply HandleClicked() const;
 };

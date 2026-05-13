@@ -51,6 +51,7 @@ struct JOYSTICKPLUGIN_API FForceFeedbackEffectConfiguration : public FForceFeedb
 	int EffectHz;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Joystick|Force Feedback",
-		meta=(ExposeOnSpawn=true, EditCondition="UseEffectRate", EditConditionHides, ToolTip="The maximum number of fixed-rate ticks processed in a single frame before the accumulated time is clamped.", ClampMin="1", ClampMax="16", UIMin="1", UIMax="16"))
+		meta=(ExposeOnSpawn=true, EditCondition="UseEffectRate", EditConditionHides, ToolTip="The maximum number of fixed-rate ticks processed in a single frame before the accumulated time is clamped.", ClampMin="1", ClampMax="16", UIMin=
+			"1", UIMax="16"))
 	int MaxSubticks;
 };

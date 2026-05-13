@@ -3,14 +3,12 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "UObject/ObjectMacros.h"
 #include "Framework/Commands/InputChord.h"
 #include "Fonts/SlateFontInfo.h"
 #include "Layout/Margin.h"
 #include "Widgets/SWidget.h"
-#include "Components/Widget.h"
 #include "Styling/SlateTypes.h"
 #include "Layout/Visibility.h"
 
@@ -164,7 +162,7 @@ public:
 
 	/** Sets the button style for the widget. */
 	UFUNCTION(BlueprintSetter, Category="Appearance")
-	void SetButtonStyle(const FButtonStyle& ButtonStyle);
+	void SetButtonStyle(const FButtonStyle& InButtonStyle);
 
 	/** Sets the text style for the widget. */
 	UFUNCTION(BlueprintSetter, Category="Appearance")
