@@ -11,6 +11,11 @@
 
 void FJoystickInformationCustomization::CustomizeHeader(const TSharedRef<IPropertyHandle> StructPropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& StructCustomizationUtils)
 {
+	if (!IsConnectedDeviceArrayItem(StructPropertyHandle))
+	{
+		return;
+	}
+
 	HeaderRow
 		.NameContent()
 		[
@@ -73,26 +78,30 @@ bool FJoystickInformationCustomization::IsConnectedDeviceArrayItem(const TShared
 
 FText FJoystickInformationCustomization::GetConnectedDeviceDisplayName(const TSharedRef<IPropertyHandle>& StructPropertyHandle) const
 {
-	if (!IsConnectedDeviceArrayItem(StructPropertyHandle))
-	{
-		return FText::GetEmpty();
-	}
-
-	TArray<void*> RawData;
-	StructPropertyHandle->AccessRawData(RawData);
-	if (RawData.Num() != 1 || RawData[0] == nullptr)
-	{
-		return FText::GetEmpty();
-	}
-
 	const UJoystickInputSettings* InputSettings = GetMutableDefault<UJoystickInputSettings>();
 	if (!InputSettings)
 	{
 		return FText::GetEmpty();
 	}
 
-	const FJoystickInformation& ConnectedDevice = *static_cast<FJoystickInformation*>(RawData[0]);
-	return FText::FromString(ConnectedDevice.GetDeviceDisplayName());
+	const FJoystickInformation* ConnectedDevice = GetJoystickInformation(StructPropertyHandle);
+	if (!ConnectedDevice)
+	{
+		return FText::GetEmpty();
+	}
+
+	return FText::FromString(ConnectedDevice->GetDeviceDisplayName());
+}
+
+const FJoystickInformation* FJoystickInformationCustomization::GetJoystickInformation(const TSharedRef<IPropertyHandle>& StructPropertyHandle) const
+{
+	TArray<void*> RawData;
+	StructPropertyHandle->AccessRawData(RawData);
+	if (RawData.Num() != 1 || RawData[0] == nullptr)
+	{
+		return nullptr;
+	}
+	return static_cast<FJoystickInformation*>(RawData[0]);
 }
 
 #endif

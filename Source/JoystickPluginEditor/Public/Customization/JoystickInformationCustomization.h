@@ -7,6 +7,8 @@
 
 #include "IPropertyTypeCustomization.h"
 
+struct FJoystickInformation;
+
 class FJoystickInformationCustomization : public IPropertyTypeCustomization
 {
 public:
@@ -21,6 +23,7 @@ public:
 private:
 	bool IsConnectedDeviceArrayItem(const TSharedRef<IPropertyHandle>& StructPropertyHandle) const;
 	FText GetConnectedDeviceDisplayName(const TSharedRef<IPropertyHandle>& StructPropertyHandle) const;
+	const FJoystickInformation* GetJoystickInformation(const TSharedRef<IPropertyHandle>& StructPropertyHandle) const;
 };
 
 #endif

@@ -86,7 +86,7 @@ public:
 	void ResetDevices();
 
 	FString GetConnectedDeviceDisplayName(const FJoystickInformation& ConnectedDevice) const;
-	FString GetMatchingConnectedDeviceProfileDisplayName(const FJoystickInputDeviceConfiguration& DeviceConfiguration) const;
+	FString GetConnectedDeviceDisplayNameByConfiguration(const FJoystickInputDeviceConfiguration& DeviceConfiguration) const;
 
 	bool GetIgnoreGameControllers() const;
 	bool SetIgnoreGameControllers(const bool NewIgnoreGameControllers);

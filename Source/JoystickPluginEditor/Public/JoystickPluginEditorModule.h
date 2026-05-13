@@ -13,7 +13,8 @@ public:
 
 private:
 	void RegisterMenus() const;
-	void RegisterPropertyLayout() const;
 	void RegisterSettings() const;
+	void RegisterPropertyLayout() const;
 	void UnregisterSettings() const;
+	void UnregisterPropertyLayout() const;
 };

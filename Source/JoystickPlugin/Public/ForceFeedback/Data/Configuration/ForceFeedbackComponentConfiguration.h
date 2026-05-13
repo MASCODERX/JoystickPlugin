@@ -44,6 +44,7 @@ struct JOYSTICKPLUGIN_API FForceFeedbackComponentConfiguration : public FForceFe
 			"Ticks the component from Chaos physics substeps using a PreIntegrate sim callback. This runs on the physics thread, so ReceivedTick implementations must not touch game-thread-only state."))
 	bool UsePhysicsCallbackTick;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Joystick|Force Feedback", meta=(ToolTip="Uses the component tick to drive the Effect tick, rather than the effect ticking itself. Useful if you want to control the Tick Interval and Tick Group of the effects."))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Joystick|Force Feedback",
+		meta=(ToolTip="Uses the component tick to drive the Effect tick, rather than the effect ticking itself. Useful if you want to control the Tick Interval and Tick Group of the effects."))
 	bool OverrideEffectTick;
 };

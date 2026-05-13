@@ -47,13 +47,13 @@ void UJoystickInputSettings::ResetDevices()
 	ConnectedDevices.Empty();
 }
 
-FString UJoystickInputSettings::GetMatchingConnectedDeviceProfileDisplayName(const FJoystickInputDeviceConfiguration& DeviceConfiguration) const
+FString UJoystickInputSettings::GetConnectedDeviceDisplayNameByConfiguration(const FJoystickInputDeviceConfiguration& DeviceConfiguration) const
 {
 	for (const FJoystickInformation& ConnectedDevice : ConnectedDevices)
 	{
 		if (ConfigurationMatchesDevice(DeviceConfiguration, ConnectedDevice))
 		{
-			return FString::Printf(TEXT("%s Profile"), *ConnectedDevice.GetDeviceDisplayName());
+			return ConnectedDevice.GetDeviceDisplayName();
 		}
 	}
 

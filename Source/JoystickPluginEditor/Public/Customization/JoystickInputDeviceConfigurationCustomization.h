@@ -7,6 +7,8 @@
 
 #include "IPropertyTypeCustomization.h"
 
+struct FJoystickInputDeviceConfiguration;
+
 class FJoystickInputDeviceConfigurationCustomization : public IPropertyTypeCustomization
 {
 public:
@@ -20,10 +22,9 @@ public:
 
 private:
 	bool IsDeviceConfigurationArrayItem(const TSharedRef<IPropertyHandle>& StructPropertyHandle) const;
-	bool IsProfileOrDeviceConfigurationArrayItem(const TSharedRef<IPropertyHandle>& StructPropertyHandle) const;
 	FText GetConnectedDeviceDisplayName(const TSharedRef<IPropertyHandle>& StructPropertyHandle) const;
-	EVisibility GetConnectedDeviceDisplayNameVisibility(const TSharedRef<IPropertyHandle>& StructPropertyHandle) const;
 	FReply ConvertToProfile(const TSharedRef<IPropertyHandle>& StructPropertyHandle) const;
+	const FJoystickInputDeviceConfiguration* GetDeviceConfiguration(const TSharedRef<IPropertyHandle>& StructPropertyHandle) const;
 };
 
 #endif

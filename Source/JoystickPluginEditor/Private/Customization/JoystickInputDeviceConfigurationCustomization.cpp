@@ -15,8 +15,6 @@
 
 void FJoystickInputDeviceConfigurationCustomization::CustomizeHeader(const TSharedRef<IPropertyHandle> StructPropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& StructCustomizationUtils)
 {
-	const bool bIsDeviceConfigurationArrayItem = IsDeviceConfigurationArrayItem(StructPropertyHandle);
-
 	HeaderRow
 		.NameContent()
 		[
@@ -39,16 +37,12 @@ void FJoystickInputDeviceConfigurationCustomization::CustomizeHeader(const TShar
 				})
 				.ColorAndOpacity(FSlateColor(FLinearColor(0.45f, 0.45f, 0.45f, 1.0f)))
 				.TextStyle(FAppStyle::Get(), "SmallText")
-				.Visibility_Lambda([this, StructPropertyHandle]()
-				{
-					return GetConnectedDeviceDisplayNameVisibility(StructPropertyHandle);
-				})
 			]
 		]
 		.ValueContent()
 		.MinDesiredWidth(350.0f);
 
-	if (bIsDeviceConfigurationArrayItem)
+	if (IsDeviceConfigurationArrayItem(StructPropertyHandle))
 	{
 		HeaderRow.ExtensionContent()
 		[
@@ -95,66 +89,30 @@ bool FJoystickInputDeviceConfigurationCustomization::IsDeviceConfigurationArrayI
 	return false;
 }
 
-bool FJoystickInputDeviceConfigurationCustomization::IsProfileOrDeviceConfigurationArrayItem(const TSharedRef<IPropertyHandle>& StructPropertyHandle) const
-{
-	TSharedPtr<IPropertyHandle> ParentHandle = StructPropertyHandle->GetParentHandle();
-	while (ParentHandle.IsValid())
-	{
-		if (const FProperty* ParentProperty = ParentHandle->GetProperty())
-		{
-			const FName ParentPropertyName = ParentProperty->GetFName();
-			if (ParentPropertyName == GET_MEMBER_NAME_CHECKED(UJoystickInputSettings, DeviceConfigurations) ||
-				ParentPropertyName == GET_MEMBER_NAME_CHECKED(UJoystickInputSettings, ProfileConfigurations))
-			{
-				return true;
-			}
-		}
-
-		ParentHandle = ParentHandle->GetParentHandle();
-	}
-
-	return false;
-}
-
 FText FJoystickInputDeviceConfigurationCustomization::GetConnectedDeviceDisplayName(const TSharedRef<IPropertyHandle>& StructPropertyHandle) const
 {
-	if (!IsProfileOrDeviceConfigurationArrayItem(StructPropertyHandle))
+	const FJoystickInputDeviceConfiguration* DeviceConfiguration = GetDeviceConfiguration(StructPropertyHandle);
+	if (!DeviceConfiguration)
 	{
 		return FText::GetEmpty();
 	}
 
-	TArray<void*> RawData;
-	StructPropertyHandle->AccessRawData(RawData);
-	if (RawData.Num() != 1 || RawData[0] == nullptr)
-	{
-		return FText::GetEmpty();
-	}
-
-	const FJoystickInputDeviceConfiguration& DeviceConfiguration = *static_cast<FJoystickInputDeviceConfiguration*>(RawData[0]);
 	const UJoystickInputSettings* InputSettings = GetDefault<UJoystickInputSettings>();
 	if (!InputSettings)
 	{
 		return FText::GetEmpty();
 	}
 
-	return FText::FromString(InputSettings->GetMatchingConnectedDeviceProfileDisplayName(DeviceConfiguration));
-}
-
-EVisibility FJoystickInputDeviceConfigurationCustomization::GetConnectedDeviceDisplayNameVisibility(const TSharedRef<IPropertyHandle>& StructPropertyHandle) const
-{
-	return GetConnectedDeviceDisplayName(StructPropertyHandle).IsEmpty() ? EVisibility::Collapsed : EVisibility::Visible;
+	return FText::FromString(InputSettings->GetConnectedDeviceDisplayNameByConfiguration(*DeviceConfiguration));
 }
 
 FReply FJoystickInputDeviceConfigurationCustomization::ConvertToProfile(const TSharedRef<IPropertyHandle>& StructPropertyHandle) const
 {
-	TArray<void*> RawData;
-	StructPropertyHandle->AccessRawData(RawData);
-	if (RawData.Num() != 1 || RawData[0] == nullptr)
+	const FJoystickInputDeviceConfiguration* DeviceConfiguration = GetDeviceConfiguration(StructPropertyHandle);
+	if (!DeviceConfiguration)
 	{
 		return FReply::Handled();
 	}
-
-	const FJoystickInputDeviceConfiguration& DeviceConfiguration = *static_cast<FJoystickInputDeviceConfiguration*>(RawData[0]);
 
 	UJoystickProfileManager* ProfileManager = GetMutableDefault<UJoystickProfileManager>();
 	if (!ProfileManager)
@@ -165,9 +123,7 @@ FReply FJoystickInputDeviceConfigurationCustomization::ConvertToProfile(const TS
 	TSharedPtr<SEditableTextBox> ProfileNameTextBox;
 	bool bAccepted = false;
 
-	const FText InitialProfileName = DeviceConfiguration.OverrideDeviceName && !DeviceConfiguration.DeviceName.IsEmpty()
-		                                 ? FText::FromString(DeviceConfiguration.DeviceName)
-		                                 : FText::GetEmpty();
+	const FText InitialProfileName = DeviceConfiguration->OverrideDeviceName && !DeviceConfiguration->DeviceName.IsEmpty() ? FText::FromString(DeviceConfiguration->DeviceName) : FText::GetEmpty();
 
 	const TSharedRef<SWindow> DialogWindow = SNew(SWindow)
 		.Title(LOCTEXT("CreateProfileDialogTitle", "Convert to Joystick Profile"))
@@ -303,13 +259,24 @@ FReply FJoystickInputDeviceConfigurationCustomization::ConvertToProfile(const TS
 		return FReply::Handled();
 	}
 
-	if (ProfileManager->CreateJoystickProfile(ProfileName, DeviceConfiguration))
+	if (ProfileManager->CreateJoystickProfile(ProfileName, *DeviceConfiguration))
 	{
 		UJoystickInputSettings* InputSettings = GetMutableDefault<UJoystickInputSettings>();
 		InputSettings->RemoveDeviceConfiguration(StructPropertyHandle->GetIndexInArray());
 	}
 
 	return FReply::Handled();
+}
+
+const FJoystickInputDeviceConfiguration* FJoystickInputDeviceConfigurationCustomization::GetDeviceConfiguration(const TSharedRef<IPropertyHandle>& StructPropertyHandle) const
+{
+	TArray<void*> RawData;
+	StructPropertyHandle->AccessRawData(RawData);
+	if (RawData.Num() != 1 || RawData[0] == nullptr)
+	{
+		return nullptr;
+	}
+	return static_cast<FJoystickInputDeviceConfiguration*>(RawData[0]);
 }
 
 #undef LOCTEXT_NAMESPACE
