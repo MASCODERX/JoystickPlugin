@@ -64,6 +64,11 @@ void UJoystickForceFeedbackComponent::BeginPlay()
 		JoystickSubsystem->JoystickSubsystemReady.AddDynamic(this, &UJoystickForceFeedbackComponent::OnSubsystemReady);
 	}
 
+	if (Configuration.AutoStartOnInitialisation)
+	{
+		Running = true;
+	}
+
 	RegisterPhysicsSubstepCallback();
 }
 
@@ -112,7 +117,7 @@ void UJoystickForceFeedbackComponent::SetComponentTickEnabled(const bool bEnable
 {
 	Super::SetComponentTickEnabled(bEnabled);
 
-	Running = bEnabled;
+	SetTickable(bEnabled);
 }
 
 #if (ENGINE_MAJOR_VERSION > 5) || (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 3)
@@ -304,11 +309,6 @@ void UJoystickForceFeedbackComponent::CreateEffects()
 			CreateInstanceEffect(JoystickInstanceId);
 		}
 	}
-
-	if (Configuration.AutoStartOnInitialisation)
-	{
-		Running = true;
-	}
 }
 
 void UJoystickForceFeedbackComponent::CreateInstanceEffect(const FJoystickInstanceId& JoystickInstanceId)
@@ -361,9 +361,22 @@ void UJoystickForceFeedbackComponent::CreateInstanceEffect(const FJoystickInstan
 	ForcedFeedbackEffect->OnDestroyedEffectDelegate.AddDynamic(this, &UJoystickForceFeedbackComponent::OnDestroyedEffect);
 
 	ForcedFeedbackEffect->Configuration.Update(Configuration);
+
+	if (Running == false)
+	{
+		// Force effect not to auto start if the component isn't "running"
+		ForcedFeedbackEffect->Configuration.AutoStartOnInitialisation = false;
+	}
+
 	if (ForcedFeedbackEffect->Configuration.AutoInitialise)
 	{
 		ForcedFeedbackEffect->InitialiseEffect();
+	}
+
+	if (Running)
+	{
+		// Effect component is already running, we should start the effect
+		ForcedFeedbackEffect->StartEffect();
 	}
 
 	{
