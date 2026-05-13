@@ -9,6 +9,7 @@
 #include "IDetailChildrenBuilder.h"
 #include "JoystickInputSettings.h"
 #include "Managers/JoystickProfileManager.h"
+#include "Misc/MessageDialog.h"
 #include "Widgets/Layout/SUniformGridPanel.h"
 
 #define LOCTEXT_NAMESPACE "JoystickInputDeviceConfigurationCustomization"
@@ -263,6 +264,12 @@ FReply FJoystickInputDeviceConfigurationCustomization::ConvertToProfile(const TS
 	{
 		UJoystickInputSettings* InputSettings = GetMutableDefault<UJoystickInputSettings>();
 		InputSettings->RemoveDeviceConfiguration(StructPropertyHandle->GetIndexInArray());
+	}
+	else
+	{
+		FMessageDialog::Open(EAppMsgType::Ok,
+		                     FText::Format(LOCTEXT("CreateProfileFailedMessage", "Failed to create joystick profile \"{0}\". Check that the plugin Profiles directory is writable and try again."),
+		                                   FText::FromString(ProfileName)), LOCTEXT("CreateProfileFailedTitle", "Create Joystick Profile Failed"));
 	}
 
 	return FReply::Handled();
