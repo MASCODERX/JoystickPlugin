@@ -3,15 +3,20 @@
 
 #include "ForceFeedback/JoystickForceFeedbackComponent.h"
 
-#include "Engine/Engine.h"
-#include "ForceFeedback/Effects/ForceFeedbackEffectBase.h"
 #include "JoystickSubsystem.h"
+#include "PBDRigidsSolver.h"
+#include "Engine/Engine.h"
+#include "ForceFeedback/JoystickForceFeedbackSubstepCallback.h"
+#include "ForceFeedback/Effects/ForceFeedbackEffectBase.h"
 #include "PhysicsEngine/PhysicsSettings.h"
 
 UJoystickForceFeedbackComponent::UJoystickForceFeedbackComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 	  , InstanceId(-1)
+	  , Running(false)
 	  , Tickable(true)
+	  , RegisteredSolver(nullptr)
+	  , SubstepCallback(nullptr)
 {
 	bAutoActivate = true;
 	PrimaryComponentTick.bCanEverTick = true;
@@ -21,10 +26,10 @@ UJoystickForceFeedbackComponent::UJoystickForceFeedbackComponent(const FObjectIn
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 3
 	if (const UPhysicsSettings* PhysicsSettings = GetDefault<UPhysicsSettings>())
 	{
-		Configuration.UseAsyncPhysicsTick = PhysicsSettings->bTickPhysicsAsync;
+		Configuration.UseNativeAsyncPhysicsTick = PhysicsSettings->bTickPhysicsAsync;
 	}
 
-	SetAsyncPhysicsTickEnabled(Configuration.UseAsyncPhysicsTick);
+	SetAsyncPhysicsTickEnabled(Configuration.UseNativeAsyncPhysicsTick);
 #endif
 }
 
@@ -33,7 +38,7 @@ void UJoystickForceFeedbackComponent::BeginPlay()
 	Super::BeginPlay();
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 3
-	SetAsyncPhysicsTickEnabled(Configuration.UseAsyncPhysicsTick);
+	SetAsyncPhysicsTickEnabled(Configuration.UseNativeAsyncPhysicsTick);
 #endif
 
 	if (!IsValid(GEngine))
@@ -58,16 +63,23 @@ void UJoystickForceFeedbackComponent::BeginPlay()
 	{
 		JoystickSubsystem->JoystickSubsystemReady.AddDynamic(this, &UJoystickForceFeedbackComponent::OnSubsystemReady);
 	}
+
+	RegisterPhysicsSubstepCallback();
 }
 
 void UJoystickForceFeedbackComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	UnregisterPhysicsSubstepCallback();
+
 	ActionOnAllEffects([&](UForceFeedbackEffectBase* Effect)
 	{
 		DestroyEffect(Effect);
 	});
 
-	Effects.Empty();
+	{
+		FScopeLock EffectsLock(&EffectsCriticalSection);
+		Effects.Empty();
+	}
 
 	Super::EndPlay(EndPlayReason);
 }
@@ -76,12 +88,24 @@ void UJoystickForceFeedbackComponent::TickComponent(const float DeltaTime, const
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (Configuration.UseAsyncPhysicsTick)
+	if (Configuration.UseNativeAsyncPhysicsTick || SubstepCallback != nullptr)
 	{
 		return;
 	}
 
+#if ENGINE_MAJOR_VERSION == 5
 	TickEffects(DeltaTime);
+#else
+	if (TargetPrimitive.IsValid())
+	{
+		return;
+	}
+
+	if (FBodyInstance* BodyInstance = TargetPrimitive->GetBodyInstance())
+	{
+		BodyInstance->AddCustomPhysics(OnCalculateCustomPhysics);
+	}
+#endif
 }
 
 void UJoystickForceFeedbackComponent::SetComponentTickEnabled(const bool bEnabled)
@@ -96,7 +120,7 @@ void UJoystickForceFeedbackComponent::AsyncPhysicsTickComponent(const float Delt
 {
 	Super::AsyncPhysicsTickComponent(DeltaTime, SimTime);
 
-	if (!Configuration.UseAsyncPhysicsTick)
+	if (!Configuration.UseNativeAsyncPhysicsTick)
 	{
 		return;
 	}
@@ -158,6 +182,8 @@ void UJoystickForceFeedbackComponent::TickEffects(const float DeltaTime)
 		return;
 	}
 
+	FScopeLock EffectsLock(&EffectsCriticalSection);
+
 	if (Effects.Num() == 0)
 	{
 		return;
@@ -178,6 +204,67 @@ void UJoystickForceFeedbackComponent::TickEffects(const float DeltaTime)
 
 		ForcedFeedbackEffect->Tick(DeltaTime);
 	}
+}
+
+void UJoystickForceFeedbackComponent::RegisterPhysicsSubstepCallback()
+{
+	if (!Configuration.UsePhysicsCallbackTick || Configuration.UseNativeAsyncPhysicsTick || SubstepCallback != nullptr)
+	{
+		return;
+	}
+
+#if ENGINE_MAJOR_VERSION == 5
+	const UWorld* World = GetWorld();
+	if (!IsValid(World))
+	{
+		return;
+	}
+
+	const FPhysScene* PhysScene = World->GetPhysicsScene();
+	if (PhysScene == nullptr)
+	{
+		return;
+	}
+
+	Chaos::FPhysicsSolverBase* Solver = PhysScene->GetSolver();
+	if (Solver == nullptr)
+	{
+		return;
+	}
+
+	RegisteredSolver = Solver;
+	SubstepCallback = Solver->CreateAndRegisterSimCallbackObject_External<FJoystickForceFeedbackSubstepCallback>();
+	SubstepCallback->Init(this);
+#else
+	const AActor* OwningPawn = GetOwner();
+	if (!OwningPawn)
+	{
+		return;
+	}
+
+	TargetPrimitive = Cast<UPrimitiveComponent>(OwningPawn->GetRootComponent());
+	if (!TargetPrimitive.IsValid())
+	{
+		return;
+	}
+
+	OnCalculateCustomPhysics.BindUObject(this, &UJoystickForceFeedbackComponent::HandleSubstepTick);
+#endif
+}
+
+void UJoystickForceFeedbackComponent::UnregisterPhysicsSubstepCallback()
+{
+#if ENGINE_MAJOR_VERSION == 5
+	if (RegisteredSolver != nullptr && SubstepCallback != nullptr)
+	{
+		RegisteredSolver->UnregisterAndFreeSimCallbackObject_External(SubstepCallback);
+	}
+
+	RegisteredSolver = nullptr;
+	SubstepCallback = nullptr;
+#else
+	OnCalculateCustomPhysics.Unbind();
+#endif
 }
 
 void UJoystickForceFeedbackComponent::CreateEffects()
@@ -216,6 +303,11 @@ void UJoystickForceFeedbackComponent::CreateEffects()
 		{
 			CreateInstanceEffect(JoystickInstanceId);
 		}
+	}
+
+	if (Configuration.AutoStartOnInitialisation)
+	{
+		Running = true;
 	}
 }
 
@@ -274,7 +366,10 @@ void UJoystickForceFeedbackComponent::CreateInstanceEffect(const FJoystickInstan
 		ForcedFeedbackEffect->InitialiseEffect();
 	}
 
-	Effects.Add(ForcedFeedbackEffect);
+	{
+		FScopeLock EffectsLock(&EffectsCriticalSection);
+		Effects.Add(ForcedFeedbackEffect);
+	}
 }
 
 void UJoystickForceFeedbackComponent::DestroyEffect(UForceFeedbackEffectBase* ForcedFeedbackEffect)
@@ -295,15 +390,28 @@ void UJoystickForceFeedbackComponent::DestroyEffect(UForceFeedbackEffectBase* Fo
 
 void UJoystickForceFeedbackComponent::DestroyInstanceEffects(const FJoystickInstanceId& JoystickInstanceId)
 {
-	ActionOnJoystickEffects(InstanceId, [&](UForceFeedbackEffectBase* Effect)
+	TArray<UForceFeedbackEffectBase*> EffectsToDestroy;
+
+	{
+		FScopeLock EffectsLock(&EffectsCriticalSection);
+		for (UForceFeedbackEffectBase* Effect : Effects)
+		{
+			if (IsValid(Effect) && Effect->GetInstanceId() == JoystickInstanceId)
+			{
+				EffectsToDestroy.Add(Effect);
+			}
+		}
+
+		Effects.RemoveAll([JoystickInstanceId](const UForceFeedbackEffectBase* Effect)
+		{
+			return !IsValid(Effect) || Effect->GetInstanceId() == JoystickInstanceId;
+		});
+	}
+
+	for (UForceFeedbackEffectBase* Effect : EffectsToDestroy)
 	{
 		DestroyEffect(Effect);
-	});
-
-	Effects.RemoveAll([JoystickInstanceId](const UForceFeedbackEffectBase* Effect)
-	{
-		return Effect->GetInstanceId() == JoystickInstanceId;
-	});
+	}
 }
 
 void UJoystickForceFeedbackComponent::OnInitialisedEffect_Implementation(const UForceFeedbackEffectBase* Effect)
@@ -328,6 +436,7 @@ void UJoystickForceFeedbackComponent::OnDestroyedEffect_Implementation(const UFo
 
 TArray<UForceFeedbackEffectBase*> UJoystickForceFeedbackComponent::GetEffects() const
 {
+	FScopeLock EffectsLock(&EffectsCriticalSection);
 	return Effects;
 }
 
@@ -361,41 +470,66 @@ void UJoystickForceFeedbackComponent::JoystickUnplugged(const FJoystickInstanceI
 
 void UJoystickForceFeedbackComponent::ActionOnAllEffects(const TFunctionRef<void(UForceFeedbackEffectBase* Effect)>& CustomInitializer)
 {
-	if (Effects.Num() == 0)
-	{
-		return;
-	}
+	TArray<UForceFeedbackEffectBase*> EffectsSnapshot;
 
-	for (UForceFeedbackEffectBase* Effect : Effects)
 	{
-		if (!IsValid(Effect))
+		FScopeLock EffectsLock(&EffectsCriticalSection);
+
+		if (Effects.Num() == 0)
 		{
-			continue;
+			return;
 		}
 
+		for (UForceFeedbackEffectBase* Effect : Effects)
+		{
+			if (IsValid(Effect))
+			{
+				EffectsSnapshot.Add(Effect);
+			}
+		}
+	}
+
+	for (UForceFeedbackEffectBase* Effect : EffectsSnapshot)
+	{
 		CustomInitializer(Effect);
 	}
 }
 
 void UJoystickForceFeedbackComponent::ActionOnJoystickEffects(const FJoystickInstanceId& JoystickInstanceId, const TFunctionRef<void(UForceFeedbackEffectBase* Effect)>& CustomInitializer)
 {
-	if (Effects.Num() == 0)
+	TArray<UForceFeedbackEffectBase*> EffectsSnapshot;
+
 	{
-		return;
+		FScopeLock EffectsLock(&EffectsCriticalSection);
+
+		if (Effects.Num() == 0)
+		{
+			return;
+		}
+
+		for (UForceFeedbackEffectBase* Effect : Effects)
+		{
+			if (!IsValid(Effect))
+			{
+				continue;
+			}
+
+			if (Effect->GetInstanceId() != JoystickInstanceId)
+			{
+				continue;
+			}
+
+			EffectsSnapshot.Add(Effect);
+		}
 	}
 
-	for (UForceFeedbackEffectBase* Effect : Effects)
+	for (UForceFeedbackEffectBase* Effect : EffectsSnapshot)
 	{
-		if (!IsValid(Effect))
-		{
-			continue;
-		}
-
-		if (Effect->GetInstanceId() != JoystickInstanceId)
-		{
-			continue;
-		}
-
 		CustomInitializer(Effect);
 	}
+}
+
+void UJoystickForceFeedbackComponent::HandleSubstepTick(const float DeltaTime, FBodyInstance* BodyInstance)
+{
+	TickEffects(DeltaTime);
 }

@@ -28,9 +28,9 @@ struct JOYSTICKPLUGIN_API FForceFeedbackConfigurationBase
 		AutoStartOnInitialisation = Configuration.AutoStartOnInitialisation;
 	}
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Joystick|Force Feedback")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Joystick|Force Feedback", meta=(ToolTip="Automatically initialise the effect on BeginPlay"))
 	bool AutoInitialise;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Joystick|Force Feedback")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Joystick|Force Feedback", meta=(ToolTip="Start the effect as soon as initialisation succeeds"))
 	bool AutoStartOnInitialisation;
 };

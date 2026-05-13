@@ -42,7 +42,7 @@ void UForceFeedbackEffectBase::BeginDestroy()
 
 void UForceFeedbackEffectBase::Tick(const float DeltaTime)
 {
-	if (Configuration.SubstepTicks)
+	if (Configuration.UseEffectRate)
 	{
 		const float FixedTimeStep = 1.0f / Configuration.EffectHz;
 
