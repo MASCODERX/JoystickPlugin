@@ -32,7 +32,7 @@ void SBallSwitch::Construct(const FArguments& InArgs)
 		.Padding(0, 0, 0, 4)
 		[
 			SNew(STextBlock)
-			.Text_Lambda([this]()
+			.Text_Lambda([this]
 			{
 				const FText Name = DisplayName.Get();
 				return Name.IsEmpty()

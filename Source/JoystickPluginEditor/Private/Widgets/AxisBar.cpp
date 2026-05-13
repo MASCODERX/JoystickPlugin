@@ -24,7 +24,7 @@ void SAxisBar::Construct(const FArguments& InArgs)
 		OnClickedDelegate.IsBound() ? FText::FromString("\n(Click to configure)") : FText::GetEmpty()
 	);
 
-	const EMouseCursor::Type HandCursor = OnClickedDelegate.IsBound() ? EMouseCursor::Hand : EMouseCursor::None;
+	const EMouseCursor::Type HandCursor = OnClickedDelegate.IsBound() ? EMouseCursor::Type::Hand : EMouseCursor::Type::Default;
 
 	SetToolTipText(AxisText);
 
@@ -169,7 +169,7 @@ void SAxisBar::SetValue(const float InValue)
 	Value.Set(FMath::Clamp(InValue, -1.f, 1.f));
 }
 
-FReply SAxisBar::HandleClicked()
+FReply SAxisBar::HandleClicked() const
 {
 	if (OnClickedDelegate.IsBound())
 	{

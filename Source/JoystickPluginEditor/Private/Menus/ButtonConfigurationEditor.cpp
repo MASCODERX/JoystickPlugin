@@ -124,10 +124,10 @@ void SButtonConfigurationEditor::Construct(const FArguments& InArgs)
 						.AutoWidth()
 						[
 							SAssignNew(InvertOutputCheckBox, SCheckBox)
-							.IsChecked_Lambda([this]() { return CurrentProperties.InvertOutput ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+							.IsChecked_Lambda([this] { return CurrentProperties.InvertOutput ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
 							.OnCheckStateChanged_Lambda([this](const ECheckBoxState NewState)
 							{
-								CurrentProperties.InvertOutput = (NewState == ECheckBoxState::Checked);
+								CurrentProperties.InvertOutput = NewState == ECheckBoxState::Checked;
 							})
 						]
 					]
@@ -151,11 +151,10 @@ void SButtonConfigurationEditor::Construct(const FArguments& InArgs)
 						.AutoWidth()
 						[
 							SAssignNew(OverrideDisplayNameCheckBox, SCheckBox)
-							.IsChecked_Lambda([this]() { return CurrentProperties.OverrideDisplayName ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+							.IsChecked_Lambda([this] { return CurrentProperties.OverrideDisplayName ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
 							.OnCheckStateChanged_Lambda([this](const ECheckBoxState NewState)
 							{
-								const bool bWasOverrideEnabled = CurrentProperties.OverrideDisplayName;
-								CurrentProperties.OverrideDisplayName = (NewState == ECheckBoxState::Checked);
+								CurrentProperties.OverrideDisplayName = NewState == ECheckBoxState::Checked;
 								if (DisplayNameInputContainer.IsValid())
 								{
 									DisplayNameInputContainer->SetVisibility(CurrentProperties.OverrideDisplayName ? EVisibility::Visible : EVisibility::Collapsed);

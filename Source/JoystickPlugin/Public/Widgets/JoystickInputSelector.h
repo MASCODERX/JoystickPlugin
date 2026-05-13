@@ -162,7 +162,7 @@ public:
 
 	/** Sets the button style for the widget. */
 	UFUNCTION(BlueprintSetter, Category="Appearance")
-	void SetButtonStyle(const FButtonStyle& ButtonStyle);
+	void SetButtonStyle(const FButtonStyle& InButtonStyle);
 
 	/** Sets the text style for the widget. */
 	UFUNCTION(BlueprintSetter, Category="Appearance")

@@ -32,7 +32,7 @@ void FJoystickInformationCustomization::CustomizeHeader(const TSharedRef<IProper
 			.Padding(8.0f, 0.0f, 0.0f, 0.0f)
 			[
 				SNew(STextBlock)
-				.Text_Lambda([this, StructPropertyHandle]()
+				.Text_Lambda([this, StructPropertyHandle]
 				{
 					return GetConnectedDeviceDisplayName(StructPropertyHandle);
 				})

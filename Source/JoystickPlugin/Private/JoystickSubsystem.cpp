@@ -47,12 +47,6 @@ void UJoystickSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		JoystickProfileManager->LoadJoystickProfiles();
 	}
 
-	UJoystickInputSettings* JoystickInputSettings = GetMutableDefault<UJoystickInputSettings>();
-	if (IsValid(JoystickInputSettings))
-	{
-		JoystickInputSettings->ResetDevices();
-	}
-
 	FJoystickLogManager::Get()->LogDebug(TEXT("UJoystickSubsystem initialising"));
 
 	if (SDL_WasInit(SdlRequiredFlags) != 0)
@@ -607,7 +601,7 @@ int UJoystickSubsystem::HandleSDLEvent(void* UserData, SDL_Event* Event)
 
 bool UJoystickSubsystem::AddDeviceByIndex(const int DeviceIndex)
 {
-	//TODO: Add collection index priority logic here somehow
+	//TODO: Add collection index priority logic here somehow. This is necessary if a device with multiple collection indexes is unplugged then replugged, it will add both despite us wanting to filter
 	FDeviceInfoSDL Device;
 	if (BuildDeviceInfoForIndex(DeviceIndex, Device))
 	{
@@ -658,7 +652,6 @@ bool UJoystickSubsystem::AddDevice(FDeviceInfoSDL& Device)
 	Device.PowerLevel = static_cast<EJoystickPowerLevel>(PowerLevel + 1);
 
 	Device.DeviceName = UJoystickFunctionLibrary::SafelyStringify(SDL_JoystickName(Device.SDLJoystick));
-	Device.SafeDeviceName = UJoystickFunctionLibrary::SanitiseDeviceName(Device.DeviceName);
 
 #if ENGINE_MAJOR_VERSION == 5
 	Device.SerialNumber = UJoystickFunctionLibrary::SafelyStringify(SDL_JoystickGetSerial(Device.SDLJoystick));
@@ -687,6 +680,19 @@ bool UJoystickSubsystem::AddDevice(FDeviceInfoSDL& Device)
 	{
 		AddHapticDevice(Device);
 	}
+
+	UJoystickProfileManager* JoystickProfileManager = GetMutableDefault<UJoystickProfileManager>();
+	if (!IsValid(JoystickProfileManager))
+	{
+		return false;
+	}
+
+	FJoystickInputDeviceConfiguration* DeviceConfig = JoystickProfileManager->GetInputDeviceConfiguration(Device);
+	if (DeviceConfig && DeviceConfig->OverrideDeviceName && !DeviceConfig->DeviceName.IsEmpty())
+	{
+		Device.DeviceName = DeviceConfig->DeviceName;
+	}
+	Device.SafeDeviceName = UJoystickFunctionLibrary::SanitiseDeviceName(Device.DeviceName);
 
 	FJoystickLogManager::Get()->LogDebug(TEXT("%s:"), *Device.DeviceName);
 	FJoystickLogManager::Get()->LogDebug(TEXT("\tInstance Id: %d"), Device.InstanceId.Value);

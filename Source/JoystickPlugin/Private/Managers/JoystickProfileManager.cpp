@@ -403,7 +403,20 @@ bool UJoystickProfileManager::CreateJoystickProfile(const FString& DeviceProfile
 	const FString DeviceProfile = FPaths::Combine(ProfilesDirectory, DeviceProfileFile);
 
 	FConfigFile ProfileConfigFile;
-	ProfileConfigFile.SetString(*JoystickConfigurationSection, GET_MEMBER_NAME_STRING_CHECKED(FJoystickInputDeviceConfiguration, DeviceHash), *DeviceConfiguration.DeviceHash);
+	switch (DeviceConfiguration.DeviceIdentifyMethod)
+	{
+	case EJoystickIdentifierType::Legacy:
+		ProfileConfigFile.SetString(*JoystickConfigurationSection, GET_MEMBER_NAME_STRING_CHECKED(FJoystickInputDeviceConfiguration, ProductGuid), *DeviceConfiguration.ProductGuid.ToString());
+	case EJoystickIdentifierType::Hashed:
+	default:
+		ProfileConfigFile.SetString(*JoystickConfigurationSection, GET_MEMBER_NAME_STRING_CHECKED(FJoystickInputDeviceConfiguration, DeviceHash), *DeviceConfiguration.DeviceHash);
+	}
+
+	if (DeviceConfiguration.OverrideDeviceName)
+	{
+		ProfileConfigFile.SetString(*JoystickConfigurationSection, GET_MEMBER_NAME_STRING_CHECKED(FJoystickInputDeviceConfiguration, DeviceName), *DeviceConfiguration.DeviceName);
+	}
+
 	for (int AxisPropertyIndex = 0; AxisPropertyIndex < DeviceConfiguration.AxisProperties.Num(); ++AxisPropertyIndex)
 	{
 		const FJoystickInputDeviceAxisProperties& AxisProperties = DeviceConfiguration.AxisProperties[AxisPropertyIndex];

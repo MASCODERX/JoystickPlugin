@@ -31,7 +31,7 @@ void FJoystickInputDeviceConfigurationCustomization::CustomizeHeader(const TShar
 			.Padding(8.0f, 0.0f, 0.0f, 0.0f)
 			[
 				SNew(STextBlock)
-				.Text_Lambda([this, StructPropertyHandle]()
+				.Text_Lambda([this, StructPropertyHandle]
 				{
 					return GetConnectedDeviceDisplayName(StructPropertyHandle);
 				})
@@ -49,7 +49,7 @@ void FJoystickInputDeviceConfigurationCustomization::CustomizeHeader(const TShar
 			SNew(SButton)
 			.Text(LOCTEXT("CreateProfileButton", "Convert to Profile"))
 			.ToolTipText(LOCTEXT("ConvertToProfileTooltip", "Write this device configuration to a deployable profile in the plugin Profiles directory."))
-			.OnClicked_Lambda([this, StructPropertyHandle]()
+			.OnClicked_Lambda([this, StructPropertyHandle]
 			{
 				return ConvertToProfile(StructPropertyHandle);
 			})
@@ -188,7 +188,7 @@ FReply FJoystickInputDeviceConfigurationCustomization::ConvertToProfile(const TS
 				.Text(InitialProfileName)
 				.HintText(LOCTEXT("ProfileNameHint", "Enter a profile name"))
 				.SelectAllTextWhenFocused(true)
-				.OnTextCommitted_Lambda([&bAccepted, DialogWindow, &ProfileNameTextBox](const FText&, ETextCommit::Type CommitType)
+				.OnTextCommitted_Lambda([&bAccepted, DialogWindow, &ProfileNameTextBox](const FText&, const ETextCommit::Type CommitType)
 				{
 					const FString TrimmedProfileName = ProfileNameTextBox.IsValid() ? ProfileNameTextBox->GetText().ToString().TrimStartAndEnd() : FString();
 					if (CommitType == ETextCommit::OnEnter && !TrimmedProfileName.IsEmpty())

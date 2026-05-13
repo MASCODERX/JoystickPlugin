@@ -30,5 +30,5 @@ private:
 
 	FText AxisText;
 
-	FReply HandleClicked();
+	FReply HandleClicked() const;
 };
