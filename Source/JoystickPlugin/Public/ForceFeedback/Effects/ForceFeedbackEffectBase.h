@@ -131,7 +131,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadonly, Category="Force Feedback")
 	bool IsInitialised;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Force Feedback")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Force Feedback", meta=(ExposeOnSpawn=true))
 	FForceFeedbackEffectConfiguration Configuration;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Force Feedback", meta=(ExposeOnSpawn=true, EditCondition="!InfiniteIterations", UIMin="0", ClampMin="0"))
@@ -149,7 +149,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Force Feedback|Tick")
 	bool TickableWhenPaused;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Force Feedback", AdvancedDisplay, meta=(EditCondition="Tickable"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Force Feedback", AdvancedDisplay, meta=(ExposeOnSpawn=true, EditCondition="Tickable"))
 	bool ForceStopAfterDurationLapsed;
 
 	UPROPERTY(BlueprintAssignable, Category="Force Feedback|Delegates", meta=(DisplayName="OnInitialisedEffect"))

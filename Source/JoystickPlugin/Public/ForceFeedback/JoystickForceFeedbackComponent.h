@@ -7,10 +7,14 @@
 #include "Data/JoystickInstanceId.h"
 #include "ForceFeedback/Data/Configuration/ForceFeedbackComponentConfiguration.h"
 #include "Runtime/Launch/Resources/Version.h"
+#include "PhysicsEngine/BodyInstance.h"
+#include "Physics/Experimental/PhysScene_Chaos.h"
+#include "Chaos/PhysicsObjectInternalInterface.h"
 
 #include "JoystickForceFeedbackComponent.generated.h"
 
 class UForceFeedbackEffectBase;
+class FJoystickForceFeedbackSubstepCallback;
 
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class JOYSTICKPLUGIN_API UJoystickForceFeedbackComponent : public UActorComponent
@@ -56,25 +60,27 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Joystick|Force Feedback Component")
 	void StopEffect();
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Joystick|Force Feedback Component")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Force Feedback", meta=(ToolTip="InstanceId of the Joystick to apply the effect to. Set to -1 to apply to all devices that support this effect type"))
 	FJoystickInstanceId InstanceId;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Joystick|Force Feedback Component")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Force Feedback", meta=(ToolTip="Effect type to spawn"))
 	TSubclassOf<UForceFeedbackEffectBase> EffectType;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Joystick|Force Feedback Component")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Force Feedback")
 	FForceFeedbackComponentConfiguration Configuration;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Joystick|Force Feedback Component")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Data")
 	TArray<UForceFeedbackEffectBase*> Effects;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Joystick|Force Feedback Component")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Data")
 	bool Running;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Joystick|Force Feedback Component")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Data")
 	bool Tickable;
 
 private:
+	friend class FJoystickForceFeedbackSubstepCallback;
+
 	UFUNCTION()
 	void OnSubsystemReady();
 	UFUNCTION()
@@ -83,6 +89,8 @@ private:
 	void JoystickUnplugged(const FJoystickInstanceId& JoystickInstanceId);
 
 	void TickEffects(float DeltaTime);
+	void RegisterPhysicsSubstepCallback();
+	void UnregisterPhysicsSubstepCallback();
 
 	void CreateEffects();
 	void CreateInstanceEffect(const FJoystickInstanceId& JoystickInstanceId);
@@ -91,4 +99,12 @@ private:
 
 	void ActionOnAllEffects(const TFunctionRef<void(UForceFeedbackEffectBase* Effect)>& CustomInitializer);
 	void ActionOnJoystickEffects(const FJoystickInstanceId& JoystickInstanceId, const TFunctionRef<void(UForceFeedbackEffectBase* Effect)>& CustomInitializer);
+
+	Chaos::FPhysicsSolverBase* RegisteredSolver;
+	FJoystickForceFeedbackSubstepCallback* SubstepCallback;
+	mutable FCriticalSection EffectsCriticalSection;
+
+	TWeakObjectPtr<UPrimitiveComponent> TargetPrimitive;
+	FCalculateCustomPhysics OnCalculateCustomPhysics;
+	void HandleSubstepTick(float DeltaTime, FBodyInstance* BodyInstance);
 };
