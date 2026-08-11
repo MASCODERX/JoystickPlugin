@@ -69,7 +69,20 @@ public class JoystickPlugin : ModuleRules
 		}
 		else if (Target.Platform == UnrealTargetPlatform.Linux)
 		{
-			// SDL should be loaded as part of the engine
+			// NOTE: hardcoded to the system SDL2 path used by Arch/CachyOS (sdl2-compat package).
+			// Revisit this before packaging for distribution on other distros or for shipping builds --
+			// a proper solution bundles/statically links SDL2 rather than depending on a system path.
+			var SystemSdlLib = "/usr/lib/libSDL2.so";
+
+			if (!File.Exists(SystemSdlLib))
+			{
+				throw new BuildException(
+					"SDL2 shared library not found. Expected:\n" +
+					$"  {SystemSdlLib}\n" +
+					"Install SDL2 via your system package manager (e.g. 'sudo pacman -S sdl2-compat' on Arch/CachyOS).");
+			}
+
+			PublicAdditionalLibraries.Add(SystemSdlLib);
 		}
 
 		var ProfilesDirectory = Path.Combine(PluginDirectory, "Profiles");
